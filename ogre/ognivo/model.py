@@ -80,8 +80,20 @@ class Debtor(object):
     """Natural person or legal entity identified by NIP, PESEL or REGON."""
 
     def __init__(self, entity):
-        self.name = entity.name
-        self.identity = Identity(entity.id_name, entity.id_value)
+        self.entity = entity
+        self.identity = Identity(entity.id.name, entity.id.value)
+
+    @property
+    def is_person(self):
+        """Return true if debtor is a natural person."""
+        return hasattr(self.entity, 'first_name')
+
+    @property
+    def name(self):
+        """Return debtor's name or first name and last name."""
+        if self.is_person:
+            return u'{} {}'.format(self.entity.first_name, self.entity.last_name)
+        return self.entity.name
 
     def __hash__(self):
         return hash(self.identity)
@@ -188,9 +200,18 @@ class Model(object):
     @property
     def sorted_debtors(self):
         """Return debtors sorted by name using Unicode collation."""
+
         collator = pyuca.Collator()
-        return sorted(self.debtors,
-                      key=lambda debtor: collator.sort_key(unicode(debtor.name)))
+
+        def key_function(debtor):
+            """Return element's comparison key for sorting."""
+            if debtor.is_person:
+                return collator.sort_key(unicode(debtor.entity.last_name)),\
+                       collator.sort_key(unicode(debtor.entity.first_name))
+            else:
+                return collator.sort_key(unicode(debtor.name))
+
+        return sorted(self.debtors, key=key_function)
 
 
 def _get_name_and_prefix(bank_code):
