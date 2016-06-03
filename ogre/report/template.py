@@ -138,6 +138,7 @@ class FrontSide(PageSide):
             if replies[bank].has_account:
                 self._canvas.push_state()
                 self._canvas.font.weight = FontWeight.BOLD
+                self._canvas.font.size_mm = 4
                 table.cell(5, row, 'TAK', HAlign.CENTER, VAlign.MIDDLE)
                 self._canvas.pop_state()
             else:
