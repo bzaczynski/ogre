@@ -12,8 +12,8 @@ $ git clone https://github.com/bzaczynski/ogre.git
 
 Binary packages:
 
-* [Linux](https://www.dropbox.com/s/a916g9hfgd1ewfg/ogre_linux.pex?dl=0)
-* [Windows](https://www.dropbox.com/s/izdh72tu0rkx5i2/ogre_windows.pex?dl=0)
+* [Linux](https://www.dropbox.com/s/c8nwqq5p0pdprtw/ogre-1.0.0rc2-linux.pex?dl=0)
+* [Windows](https://www.dropbox.com/s/ldub8gjb9s60wyi/ogre-1.0.0rc2-windows.pex?dl=0)
 
 ### Requirements
 
@@ -198,7 +198,7 @@ The name *ogre* is already taken by another project on [PyPI](https://pypi.pytho
 $ mkvirtualenv venv
 (venv) $ pip install pex "setuptools<20.11,>=2.2"
 (venv) $ python setup.py bdist_wheel
-(venv) $ pex "ogre==1.0.0rc1" -f dist -r requirements.txt -c ogreport.py -o ogre_linux.pex
+(venv) $ pex "ogre==1.0.0rc2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc2-linux.pex
 ```
 
 #### Windows
@@ -209,7 +209,7 @@ C:\> virtualenv venv
 C:\> venv\Scripts\activate
 (venv) C:\> pip install pex
 (venv) C:\> python setup.py bdist_wheel
-(venv) C:\> pex "ogre==1.0.0rc1" -f dist -r requirements.txt -c ogreport.py -o ogre_windows.pex
+(venv) C:\> pex "ogre==1.0.0rc2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc2-windows.pex
 ```
 
 ### Author
