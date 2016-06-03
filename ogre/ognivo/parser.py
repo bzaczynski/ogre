@@ -25,12 +25,15 @@ Utilities for XML document handling.
 """
 
 import codecs
-import collections
 import xmltodict
 
+from collections import namedtuple
 
-LegalEntity = collections.namedtuple('LegalEntity',
-                                     'name id_name id_value has_account')
+
+Id = namedtuple('Id', 'name value')
+NaturalPerson = namedtuple('NaturalPerson', 'first_name last_name id has_account')
+LegalEntity = namedtuple('LegalEntity', 'name id has_account')
+
 
 
 class BankReplyParser(object):
@@ -95,22 +98,30 @@ class BankReplyParser(object):
     @property
     def entities(self):
         """Return a generator of debtor entities from the reply."""
-        for element in self._xml.get_list('/ePismo/TrescPisma/Dluznicy/Dluznik'):
 
+        def identity(child):
+            """Return one of PESEL, NIP, REGON with a corresponding value."""
+            name, value = child.get('Oznaczenie').items().pop()
+            return Id(name.upper(), value)
+
+        def has_account(child):
+            """Return true if debtor has an account in the given bank."""
+            return child.get('Odpowiedz').lower() == 'tak'
+
+        for element in self._xml.get_list('/ePismo/TrescPisma/Dluznicy/Dluznik'):
             if 'OsobaFizyczna' in element:
                 child = element.get('OsobaFizyczna')
-                name = capitalize(u'{} {}'.format(child.get('Imie'),
-                                                  child.get('Nazwisko')))
+                yield NaturalPerson(
+                    capitalize(child.get('Imie')),
+                    capitalize(child.get('Nazwisko')),
+                    identity(child),
+                    has_account(child))
             elif 'OsobaPrawna' in element:
                 child = element.get('OsobaPrawna')
-                name = child.get('NazwaInstytucji')
-            else:
-                continue
-
-            has_account = child.get('Odpowiedz').lower() == 'tak'
-            id_name, id_value = child.get('Oznaczenie').items().pop()
-
-            yield LegalEntity(name, id_name.upper(), id_value, has_account)
+                yield LegalEntity(
+                    child.get('NazwaInstytucji'),
+                    identity(child),
+                    has_account(child))
 
 
 class XmlDocument(object):
