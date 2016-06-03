@@ -1,0 +1,10 @@
+# Changelog
+
+## 1.0.0rc2
+
+* Sort person debtors by last name first using UCA collation.
+* Use more prominent font size for positive replies.
+
+## 1.0.0rc1
+
+* Initial version.
