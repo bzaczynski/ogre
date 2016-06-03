@@ -1,9 +1,10 @@
 import unittest
 import mock
 import collections
+import itertools
 
 from ogre.config import Config
-from ogre.ognivo.parser import LegalEntity
+from ogre.ognivo.parser import NaturalPerson, LegalEntity, Id
 from ogre.ognivo.model import Identity, Reply, Debtor, Bank, Model, _get_name_and_prefix
 
 from tests.commons import FakeFileObject
@@ -69,30 +70,52 @@ class TestReply(unittest.TestCase):
 class TestDebtor(unittest.TestCase):
 
     def setUp(self):
-        self.entity = LegalEntity(u'za\u017c\xf3\u0142\u0107', 'PESEL', '12345678901', True)
-        self.debtor = Debtor(self.entity)
+
+        self.person = NaturalPerson(
+            u'za\u017c\xf3\u0142\u0107',
+            u'g\u0119\u015bl\u0105',
+            Id('PESEL', '12345678901'),
+            True)
+
+        self.legal = LegalEntity(
+            u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144',
+            Id('NIP', '1234567890'),
+            False)
+
+        self.debtor1 = Debtor(self.person)
+        self.debtor2 = Debtor(self.legal)
 
     def test_str(self):
-        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87", id=Identity(name="PESEL", value="12345678901"))', str(self.debtor))
+        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", id=Identity(name="PESEL", value="12345678901"))', str(self.debtor1))
 
     def test_repr(self):
-        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87", id=Identity(name="PESEL", value="12345678901"))', repr(self.debtor))
+        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", id=Identity(name="PESEL", value="12345678901"))', repr(self.debtor1))
 
     def test_unicode(self):
-        self.assertEqual(u'Debtor(name="za\u017c\xf3\u0142\u0107", id=Identity(name="PESEL", value="12345678901"))', unicode(self.debtor))
+        self.assertEqual(u'Debtor(name="za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105", id=Identity(name="PESEL", value="12345678901"))', unicode(self.debtor1))
+
+    def test_should_is_person(self):
+        self.assertTrue(self.debtor1.is_person)
+        self.assertFalse(self.debtor2.is_person)
 
     def test_should_get_debtor_name(self):
-        self.assertEqual(u'za\u017c\xf3\u0142\u0107', self.debtor.name)
+        self.assertEqual(u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105', self.debtor1.name)
+        self.assertEqual(u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144', self.debtor2.name)
 
     def test_should_get_debtor_identity(self):
-        self.assertIsInstance(self.debtor.identity, Identity)
-        self.assertEqual('PESEL', self.debtor.identity.name)
-        self.assertEqual('12345678901', self.debtor.identity.value)
+
+        self.assertIsInstance(self.debtor1.identity, Identity)
+        self.assertEqual('PESEL', self.debtor1.identity.name)
+        self.assertEqual('12345678901', self.debtor1.identity.value)
+
+        self.assertIsInstance(self.debtor2.identity, Identity)
+        self.assertEqual('NIP', self.debtor2.identity.name)
+        self.assertEqual('1234567890', self.debtor2.identity.value)
 
     def test_should_uniquely_identify_debtor_by_id(self):
 
-        debtor1 = Debtor(LegalEntity('dolor sit amet', 'NIP', '123', True))
-        debtor2 = Debtor(LegalEntity('sed do eiusmod', 'NIP', '123', False))
+        debtor1 = Debtor(LegalEntity('dolor sit amet', Id('NIP', '123'), True))
+        debtor2 = Debtor(LegalEntity('sed do eiusmod', Id('NIP', '123'), False))
 
         self.assertEqual(debtor1, debtor2)
         self.assertNotEqual(id(debtor1), id(debtor2))
@@ -295,11 +318,11 @@ Hello world
 
 class TestModel(unittest.TestCase):
 
-    JAN_KOWALSKI = LegalEntity('Jan Kowalski', 'PESEL', '12345678900', False)
-    JAN_KOWALSKI_2 = LegalEntity('JAN KOWALSKI', 'PESEL', '12345678900', True)
-    ANNA_NOWAK = LegalEntity('Anna Nowak', 'PESEL', '00987654321', True)
-    FIRMA_1 = LegalEntity('Firma Sp. z O.O.', 'NIP', '1234567890', False)
-    FIRMA_2 = LegalEntity('Amber Scam Sp. z O.O.', 'REGON', '123456789', True)
+    JAN_KOWALSKI = NaturalPerson('Jan', 'Kowalski', Id('PESEL', '12345678900'), False)
+    JAN_KOWALSKI_2 = NaturalPerson('JAN', 'KOWALSKI', Id('PESEL', '12345678900'), True)
+    ANNA_NOWAK = NaturalPerson('Anna', 'Nowak', Id('PESEL', '00987654321'), True)
+    FIRMA_1 = LegalEntity('Firma Sp. z O.O.', Id('NIP', '1234567890'), False)
+    FIRMA_2 = LegalEntity('Amber Scam Sp. z O.O.', Id('REGON', '123456789'), True)
 
     def setUp(self):
 
@@ -919,76 +942,113 @@ class TestModel(unittest.TestCase):
 
     def test_should_sort_debtors_by_name_using_unicode_collation(self):
 
+        it = itertools.count(1)
+
+        def identity():
+            return Id('PESEL', next(it))
+
+        def person(first_name, last_name):
+            return NaturalPerson(first_name, last_name, identity(), False)
+
+        def legal(name):
+            return LegalEntity(name, identity(), False)
+
         self.mock_parser.entities = [
-            LegalEntity(u'Karol', 'PESEL', '14', False),
-            LegalEntity(u'Robert', 'PESEL', '23', False),
-            LegalEntity(u'\u015aabina', 'PESEL', '25', False),
-            LegalEntity(u'\u0104dam', 'PESEL', '2', False),
-            LegalEntity(u'\u0179enon', 'PESEL', '31', False),
-            LegalEntity(u'\u0143atalia', 'PESEL', '19', False),
-            LegalEntity(u'Grzegorz', 'PESEL', '10', False),
-            LegalEntity(u'\u0118dward', 'PESEL', '8', False),
-            LegalEntity(u'Julia', 'PESEL', '13', False),
-            LegalEntity(u'Cecylia', 'PESEL', '4', False),
-            LegalEntity(u'Yvonne', 'PESEL', '29', False),
-            LegalEntity(u'Olaf', 'PESEL', '20', False),
-            LegalEntity(u'Franciszek', 'PESEL', '9', False),
-            LegalEntity(u'Edward', 'PESEL', '7', False),
-            LegalEntity(u'\u017benon', 'PESEL', '32', False),
-            LegalEntity(u'Monika', 'PESEL', '17', False),
-            LegalEntity(u'Urszula', 'PESEL', '27', False),
-            LegalEntity(u'\u0106ecylia', 'PESEL', '5', False),
-            LegalEntity(u'Lech', 'PESEL', '15', False),
-            LegalEntity(u'Zenon', 'PESEL', '30', False),
-            LegalEntity(u'Sabina', 'PESEL', '24', False),
-            LegalEntity(u'\xd3laf', 'PESEL', '21', False),
-            LegalEntity(u'Weronika', 'PESEL', '28', False),
-            LegalEntity(u'Adam', 'PESEL', '1', False),
-            LegalEntity(u'\u0141ukasz', 'PESEL', '16', False),
-            LegalEntity(u'Patrycja', 'PESEL', '22', False),
-            LegalEntity(u'Tadeusz', 'PESEL', '26', False),
-            LegalEntity(u'Dominik', 'PESEL', '6', False),
-            LegalEntity(u'Barbara', 'PESEL', '3', False),
-            LegalEntity(u'Hania', 'PESEL', '11', False),
-            LegalEntity(u'Natalia', 'PESEL', '18', False),
-            LegalEntity(u'Ignacy', 'PESEL', '12', False)
+            person(u'Karol', u'Walczak'),
+            person(u'Maja', u'Szulc'),
+            person(u'Franciszek', u'Ostrowski'),
+            person(u'Leon', u'Mucha'),
+            legal(u'Auchan'),
+            person(u'Wiktoria', u'Pawlak'),
+            person(u'Natalia', u'Kasprzak'),
+            person(u'Hanna', u'Majchrzak'),
+            person(u'Kacper', u'Krupa'),
+            person(u'Tymon', u'D\u0105browski'),
+            legal(u'Carrefour'),
+            person(u'Julian', u'Sowa'),
+            person(u'Miko\u0142aj', u'Ostrowski'),
+            person(u'Zuzanna', u'Kozio\u0142'),
+            person(u'Anna', u'Augustyniak'),
+            person(u'Weronika', u'Markowska'),
+            legal(u'Biedronka'),
+            person(u'Wiktoria', u'Rogowska'),
+            person(u'\u0141ukasz', u'\u0141uczak'),
+            person(u'Maksymilian', u'G\xf3rski'),
+            legal(u'Tesco'),
+            person(u'Alicja', u'Morawska'),
+            legal(u'\u017babka'),
+            person(u'Szymon', u'Kosi\u0144ski'),
+            person(u'Piotr', u'Tomczyk'),
+            person(u'Kacper', u'Olejnik'),
+            person(u'Szymon', u'W\xf3jcik'),
+            person(u'Mi\u0142osz', u'Zalewski'),
+            person(u'Karolina', u'Lewandowska'),
+            person(u'Urszula', u'Lewandowska'),
+            person(u'Tymoteusz', u'Kowalik'),
+            person(u'Sebastian', u'Krupa'),
+            person(u'Urszula', u'Ka\u017amierczak'),
+            person(u'Kacper', u'Bara\u0144ski'),
+            person(u'Szymon', u'Sobolewski'),
+            person(u'Filip', u'Nawrocki'),
+            legal(u'Lewiatan'),
+            person(u'Anna', u'Ko\u0142odziej'),
+            person(u'Jan', u'Kr\xf3l'),
+            person(u'Julia', u'Markiewicz'),
+            person(u'Lena', u'Karpi\u0144ska'),
+            person(u'Wiktoria', u'Marzec'),
+            person(u'Olaf', u'Matusiak'),
+            person(u'Dominika', u'Nowak'),
+            person(u'Stanis\u0142aw', u'Kurek')
         ]
 
         model = Model(['/path/to/file'])
 
         self.assertListEqual([
-            u'Adam',
-            u'\u0104dam',
-            u'Barbara',
-            u'Cecylia',
-            u'\u0106ecylia',
-            u'Dominik',
-            u'Edward',
-            u'\u0118dward',
-            u'Franciszek',
-            u'Grzegorz',
-            u'Hania',
-            u'Ignacy',
-            u'Julia',
-            u'Karol',
-            u'Lech',
-            u'\u0141ukasz',
-            u'Monika',
-            u'Natalia',
-            u'\u0143atalia',
-            u'Olaf',
-            u'\xd3laf',
-            u'Patrycja',
-            u'Robert',
-            u'Sabina',
-            u'\u015aabina',
-            u'Tadeusz',
-            u'Urszula',
-            u'Weronika',
-            u'Yvonne',
-            u'Zenon',
-            u'\u0179enon',
-            u'\u017benon'],
+            u'Auchan',
+            u'Biedronka',
+            u'Carrefour',
+            u'Lewiatan',
+            u'Tesco',
+            u'\u017babka',
+            u'Anna Augustyniak',
+            u'Kacper Bara\u0144ski',
+            u'Tymon D\u0105browski',
+            u'Maksymilian G\xf3rski',
+            u'Lena Karpi\u0144ska',
+            u'Natalia Kasprzak',
+            u'Urszula Ka\u017amierczak',
+            u'Anna Ko\u0142odziej',
+            u'Szymon Kosi\u0144ski',
+            u'Tymoteusz Kowalik',
+            u'Zuzanna Kozio\u0142',
+            u'Jan Kr\xf3l',
+            u'Kacper Krupa',
+            u'Sebastian Krupa',
+            u'Stanis\u0142aw Kurek',
+            u'Karolina Lewandowska',
+            u'Urszula Lewandowska',
+            u'\u0141ukasz \u0141uczak',
+            u'Hanna Majchrzak',
+            u'Julia Markiewicz',
+            u'Weronika Markowska',
+            u'Wiktoria Marzec',
+            u'Olaf Matusiak',
+            u'Alicja Morawska',
+            u'Leon Mucha',
+            u'Filip Nawrocki',
+            u'Dominika Nowak',
+            u'Kacper Olejnik',
+            u'Franciszek Ostrowski',
+            u'Miko\u0142aj Ostrowski',
+            u'Wiktoria Pawlak',
+            u'Wiktoria Rogowska',
+            u'Szymon Sobolewski',
+            u'Julian Sowa',
+            u'Maja Szulc',
+            u'Piotr Tomczyk',
+            u'Karol Walczak',
+            u'Szymon W\xf3jcik',
+            u'Mi\u0142osz Zalewski'],
             [x.name for x in model.sorted_debtors])
 
     def test_collation_should_accept_str(self):
@@ -999,13 +1059,13 @@ class TestModel(unittest.TestCase):
 
         debtor1, debtor2 = model.sorted_debtors
 
-        self.assertEqual('Anna Nowak', debtor1.name)
+        self.assertEqual('Jan Kowalski', debtor1.name)
         self.assertEqual('PESEL', debtor1.identity.name)
-        self.assertEqual('00987654321', debtor1.identity.value)
+        self.assertEqual('12345678900', debtor1.identity.value)
 
-        self.assertEqual('Jan Kowalski', debtor2.name)
+        self.assertEqual('Anna Nowak', debtor2.name)
         self.assertEqual('PESEL', debtor2.identity.name)
-        self.assertEqual('12345678900', debtor2.identity.value)
+        self.assertEqual('00987654321', debtor2.identity.value)
 
 
 class TestGetBankNameAndPrefix(unittest.TestCase):

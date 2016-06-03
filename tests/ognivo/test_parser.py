@@ -3,7 +3,7 @@ import mock
 
 import StringIO
 
-from ogre.ognivo.parser import BankReplyParser, LegalEntity
+from ogre.ognivo.parser import BankReplyParser, LegalEntity, NaturalPerson, Id
 from ogre.ognivo.parser import XmlDocument, XmlElement
 
 
@@ -61,9 +61,12 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
-        self.assertListEqual([
-            LegalEntity(u'Jan Kowalski', u'PESEL', u'12345678900', True)],
-            list(parser.entities))
+        entities = list(parser.entities)
+        self.assertEqual(1, len(entities))
+
+        entity = entities.pop()
+        self.assertIsInstance(entity, NaturalPerson)
+        self.assertEqual(NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True), entity)
 
     @mock.patch('codecs.open')
     def test_should_parse_multiple_entities(self, mock_open):
@@ -100,10 +103,13 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
+        entities = list(parser.entities)
+        self.assertEqual(2, len(entities))
+
         self.assertListEqual([
-            LegalEntity(u'Jan Kowalski', u'PESEL', u'12345678900', True),
-            LegalEntity(u'Anna Nowak', u'PESEL', u'00987654321', False)],
-            list(parser.entities))
+            NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True),
+            NaturalPerson(first_name=u'Anna', last_name=u'Nowak', id=Id(name=u'PESEL', value=u'00987654321'), has_account=False)
+        ], entities)
 
     @mock.patch('codecs.open')
     def test_should_parse_natural_person_and_legal_entity_differently(self, mock_open):
@@ -149,11 +155,14 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
+        entities = list(parser.entities)
+        self.assertEqual(3, len(entities))
+
         self.assertListEqual([
-            LegalEntity(u'Jan Kowalski', u'PESEL', u'12345678900', True),
-            LegalEntity(u'Firma Sp. z O.O.', u'NIP', u'1234567890', False),
-            LegalEntity(u'Anna Nowak', u'PESEL', u'00987654321', False)],
-            list(parser.entities))
+            NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True),
+            LegalEntity(name=u'Firma Sp. z O.O.', id=Id(name=u'NIP', value=u'1234567890'), has_account=False),
+            NaturalPerson(first_name=u'Anna', last_name=u'Nowak', id=Id(name=u'PESEL', value=u'00987654321'), has_account=False)
+        ], entities)
 
     @mock.patch('codecs.open')
     def test_should_convert_identity_name_to_uppercase(self, mock_open):
@@ -180,7 +189,7 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
-        self.assertTrue(list(parser.entities).pop()[1].isupper())
+        self.assertTrue(list(parser.entities).pop().id.name.isupper())
 
     @mock.patch('codecs.open')
     def test_should_decode_unicode_values(self, mock_open):
@@ -192,12 +201,21 @@ class TestBankReplyParser(unittest.TestCase):
             <Dluznik>
                 <OsobaFizyczna>
                     <Imie>ZA\u017b\xd3\u0141\u0106</Imie>
-                    <Nazwisko>G\u0118\u015aL\u0104-JA\u0179\u0143</Nazwisko>
+                    <Nazwisko>G\u0118\u015aL\u0104 JA\u0179\u0143</Nazwisko>
                     <Oznaczenie>
                         <regon>123456789</regon>
                     </Oznaczenie>
                     <Odpowiedz>tak</Odpowiedz>
                 </OsobaFizyczna>
+            </Dluznik>
+            <Dluznik>
+                <OsobaPrawna>
+                    <NazwaInstytucji>ZA\u017b\xd3\u0141\u0106 G\u0118\u015aL\u0104-JA\u0179\u0143</NazwaInstytucji>
+                    <Oznaczenie>
+                        <NIP>1234567890</NIP>
+                    </Oznaczenie>
+                    <Odpowiedz>nie</Odpowiedz>
+                </OsobaPrawna>
             </Dluznik>
         </Dluznicy>
     </TrescPisma>
@@ -207,9 +225,11 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
-        self.assertEqual(
-            u'Za\u017c\xf3\u0142\u0107 G\u0119\u015bl\u0105-Ja\u017a\u0144',
-            list(parser.entities).pop()[0])
+        entity1, entity2 = list(parser.entities)
+
+        self.assertEqual(u'Za\u017c\xf3\u0142\u0107', entity1.first_name)
+        self.assertEqual(u'G\u0119\u015bl\u0105 Ja\u017a\u0144', entity1.last_name)
+        self.assertEqual(u'ZA\u017b\xd3\u0141\u0106 G\u0118\u015aL\u0104-JA\u0179\u0143', entity2.name)
 
     @mock.patch('codecs.open')
     def test_should_capitalize_hyphenated_names(self, mock_open):
@@ -237,8 +257,8 @@ class TestBankReplyParser(unittest.TestCase):
         parser = BankReplyParser('/path/to/file.xml')
 
         self.assertEqual(
-            u'Za\u017c\xf3\u0142\u0107 G\u0119\u015bl\u0105-Ja\u017a\u0144',
-            list(parser.entities).pop()[0])
+            u'G\u0119\u015bl\u0105-Ja\u017a\u0144',
+            list(parser.entities).pop().last_name)
 
 
 class TestXmlDocument(unittest.TestCase):
