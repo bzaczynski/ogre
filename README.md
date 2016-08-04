@@ -12,8 +12,8 @@ $ git clone https://github.com/bzaczynski/ogre.git
 
 Binary packages:
 
-* [Linux](https://www.dropbox.com/s/c8nwqq5p0pdprtw/ogre-1.0.0rc2-linux.pex?dl=0)
-* [Windows](https://www.dropbox.com/s/ldub8gjb9s60wyi/ogre-1.0.0rc2-windows.pex?dl=0)
+* [Linux](https://www.dropbox.com/s/c8nwqq5p0pdprtw/ogre-1.0.0rc3-linux.pex?dl=1)
+* [Windows](https://www.dropbox.com/s/ldub8gjb9s60wyi/ogre-1.0.0rc3-windows.pex?dl=1)
 
 ### Requirements
 
