@@ -1,4 +1,5 @@
 enum34==1.1.6
+python-dateutil==2.5.3
 pyuca==1.1.2
 reportlab==3.3.0
 xmltodict==0.10.1
