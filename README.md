@@ -190,7 +190,7 @@ Note that all three configuration sources can be used simultaneously. They are p
 
 **WARNING!**
 
-The name *ogre* is already taken by another project on [PyPI](https://pypi.python.org/pypi) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.0.0rc1* is given below.
+The name *ogre* is already taken by another project on [PyPI](https://pypi.python.org/pypi) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.0.0rc3* is given below.
 
 #### Linux
 
@@ -198,7 +198,7 @@ The name *ogre* is already taken by another project on [PyPI](https://pypi.pytho
 $ mkvirtualenv venv
 (venv) $ pip install pex "setuptools<20.11,>=2.2"
 (venv) $ python setup.py bdist_wheel
-(venv) $ pex "ogre==1.0.0rc2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc2-linux.pex
+(venv) $ pex "ogre==1.0.0rc3" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc3-linux.pex
 ```
 
 #### Windows
@@ -209,7 +209,7 @@ C:\> virtualenv venv
 C:\> venv\Scripts\activate
 (venv) C:\> pip install pex
 (venv) C:\> python setup.py bdist_wheel
-(venv) C:\> pex "ogre==1.0.0rc2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc2-windows.pex
+(venv) C:\> pex "ogre==1.0.0rc3" -f dist -r requirements.txt -c ogreport.py -o ogre-1.0.0rc3-windows.pex
 ```
 
 ### Author
