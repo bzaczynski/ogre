@@ -2,6 +2,9 @@ import unittest
 import mock
 import collections
 import itertools
+import datetime
+
+import dateutil.parser
 
 from ogre.config import Config
 from ogre.ognivo.parser import NaturalPerson, LegalEntity, Id
@@ -49,22 +52,69 @@ class TestReply(unittest.TestCase):
         mock_get.return_value = u'za\u017c\xf3\u0142\u0107', '001'
 
         self.bank = Bank('00123')
-        self.reply = Reply(self.bank, '1970-01-01', True, '/path/to/file')
+        self.reply = Reply(self.bank, dateutil.parser.parse('1970-01-01'), True, '/path/to/file')
+
+    def test_should_allow_string_date(self):
+
+        reply = Reply(self.bank, '1970-01-01', False, '/path/to/file')
+
+        self.assertEqual(self.bank, reply.bank)
+        self.assertEqual('1970-01-01', reply.date)
+        self.assertFalse(reply.has_account)
+        self.assertEqual('/path/to/file', reply.file_path)
 
     def test_values(self):
         self.assertEqual(self.bank, self.reply.bank)
-        self.assertEqual('1970-01-01', self.reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), self.reply.date)
         self.assertTrue(self.reply.has_account)
         self.assertEqual('/path/to/file', self.reply.file_path)
 
     def test_str(self):
-        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01", has_account=true, file_path="/path/to/file")', str(self.reply))
+        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', str(self.reply))
 
     def test_repr(self):
-        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01", has_account=true, file_path="/path/to/file")', repr(self.reply))
+        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', repr(self.reply))
 
     def test_unicode(self):
-        self.assertEqual(u'Reply(bank="Bank(code="00123", name="za\u017c\xf3\u0142\u0107")", date="1970-01-01", has_account=true, file_path="/path/to/file")', unicode(self.reply))
+        self.assertEqual(u'Reply(bank="Bank(code="00123", name="za\u017c\xf3\u0142\u0107")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', unicode(self.reply))
+
+    def test_date_string_str(self):
+        reply = Reply(self.bank, '1970-01-01', False, '/path/to/file')
+        self.assertEqual('1970-01-01', reply.date_string)
+
+    def test_date_string_datetime_without_time(self):
+        date = dateutil.parser.parse('1970-01-01')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertEqual('1970-01-01', reply.date_string)
+
+    def test_date_string_datetime_with_time(self):
+        date = dateutil.parser.parse('1970-01-01T23:59')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertEqual('1970-01-01', reply.date_string)
+
+    def test_date_string_datetime_with_time_with_timezone(self):
+        date = dateutil.parser.parse('1970-01-01T23:59+02:00')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertEqual('1970-01-01', reply.date_string)
+
+    def test_time_string_str(self):
+        reply = Reply(self.bank, '1970-01-01T23:59', False, '/path/to/file')
+        self.assertIsNone(reply.time_string)
+
+    def test_time_string_datetime_without_time(self):
+        date = dateutil.parser.parse('1970-01-01')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertIsNone(reply.time_string)
+
+    def test_time_string_datetime_with_time(self):
+        date = dateutil.parser.parse('1970-01-01T23:59')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertEqual('23:59', reply.time_string)
+
+    def test_time_string_datetime_with_time_with_timezone(self):
+        date = dateutil.parser.parse('1970-01-01T23:59+02:00')
+        reply = Reply(self.bank, date, False, '/path/to/file')
+        self.assertEqual('23:59', reply.time_string)
 
 
 class TestDebtor(unittest.TestCase):
@@ -230,7 +280,7 @@ Hello world
         reply = model.replies[debtor][bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('2016-12-31', reply.date)
+        self.assertEqual(datetime.datetime(2016, 12, 31, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -268,7 +318,7 @@ Hello world
         reply = model.replies[debtor][bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('2016-12-31', reply.date)
+        self.assertEqual(datetime.datetime(2016, 12, 31, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file1', reply.file_path)
 
@@ -306,7 +356,7 @@ Hello world
         reply = model.replies[debtor][bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('2016-12-31', reply.date)
+        self.assertEqual(datetime.datetime(2016, 12, 31, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file1', reply.file_path)
 
@@ -342,7 +392,7 @@ class TestModel(unittest.TestCase):
         self.patcher2 = mock.patch('ogre.ognivo.model.BankReplyParser')
         self.mock_parser_class = self.patcher2.start()
         self.mock_parser = type(self.mock_parser_class.return_value)
-        self.mock_parser.date = '1970-01-01'
+        self.mock_parser.date = dateutil.parser.parse('1970-01-01')
         self.mock_parser.bank_code = mock.PropertyMock(side_effect=sorted(self.files.values()))
 
     def tearDown(self):
@@ -469,7 +519,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -504,14 +554,14 @@ class TestModel(unittest.TestCase):
         reply1 = banks_replies_for_debtor[bank1]
 
         self.assertEqual(bank1, reply1.bank)
-        self.assertEqual('1970-01-01', reply1.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply1.date)
         self.assertFalse(reply1.has_account)
         self.assertEqual('/path/to/file1', reply1.file_path)
 
         reply2 = banks_replies_for_debtor[bank2]
 
         self.assertEqual(bank2, reply2.bank)
-        self.assertEqual('1970-01-01', reply2.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply2.date)
         self.assertTrue(reply2.has_account)
         self.assertEqual('/path/to/file2', reply2.file_path)
 
@@ -551,7 +601,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor1[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -567,7 +617,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor2[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -583,7 +633,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor3[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -628,7 +678,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor1[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file2', reply.file_path)
 
@@ -644,7 +694,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor2[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file2', reply.file_path)
 
@@ -660,7 +710,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor3[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file1', reply.file_path)
 
@@ -676,7 +726,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor4[bank1]
 
         self.assertEqual(bank1, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file1', reply.file_path)
 
@@ -686,7 +736,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor4[bank2]
 
         self.assertEqual(bank2, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file2', reply.file_path)
 
@@ -722,14 +772,14 @@ class TestModel(unittest.TestCase):
         reply1 = banks_replies_for_debtor[bank1]
 
         self.assertEqual(bank1, reply1.bank)
-        self.assertEqual('1970-01-01', reply1.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply1.date)
         self.assertFalse(reply1.has_account)
         self.assertEqual('/path/to/file1', reply1.file_path)
 
         reply2 = banks_replies_for_debtor[bank2]
 
         self.assertEqual(bank2, reply2.bank)
-        self.assertEqual('1970-01-01', reply2.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply2.date)
         self.assertFalse(reply2.has_account)
         self.assertEqual('/path/to/file2', reply2.file_path)
 
@@ -765,14 +815,14 @@ class TestModel(unittest.TestCase):
         reply1 = banks_replies_for_debtor[bank1]
 
         self.assertEqual(bank1, reply1.bank)
-        self.assertEqual('1970-01-01', reply1.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply1.date)
         self.assertTrue(reply1.has_account)
         self.assertEqual('/path/to/file1', reply1.file_path)
 
         reply2 = banks_replies_for_debtor[bank2]
 
         self.assertEqual(bank2, reply2.bank)
-        self.assertEqual('1970-01-01', reply2.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply2.date)
         self.assertFalse(reply2.has_account)
         self.assertEqual('/path/to/file2', reply2.file_path)
 
@@ -808,14 +858,14 @@ class TestModel(unittest.TestCase):
         reply1 = banks_replies_for_debtor[bank1]
 
         self.assertEqual(bank1, reply1.bank)
-        self.assertEqual('1970-01-01', reply1.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply1.date)
         self.assertTrue(reply1.has_account)
         self.assertEqual('/path/to/file1', reply1.file_path)
 
         reply2 = banks_replies_for_debtor[bank2]
 
         self.assertEqual(bank2, reply2.bank)
-        self.assertEqual('1970-01-01', reply2.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply2.date)
         self.assertTrue(reply2.has_account)
         self.assertEqual('/path/to/file2', reply2.file_path)
 
@@ -846,7 +896,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1970-01-01', reply.date)
+        self.assertEqual(datetime.datetime(1970, 1, 1, 0, 0), reply.date)
         self.assertFalse(reply.has_account)
         self.assertEqual('/path/to/file', reply.file_path)
 
@@ -903,7 +953,8 @@ class TestModel(unittest.TestCase):
 
         self.mock_parser.bank_code = '00123'
         self.mock_parser.date = mock.PropertyMock(side_effect=[
-            '1970-01-01', '1990-12-31'
+            dateutil.parser.parse('1970-01-01'),
+            dateutil.parser.parse('1990-12-31')
         ])
         self.mock_parser.entities = mock.PropertyMock(side_effect=[
             [self.JAN_KOWALSKI],
@@ -932,7 +983,7 @@ class TestModel(unittest.TestCase):
         reply = banks_replies_for_debtor[bank]
 
         self.assertEqual(bank, reply.bank)
-        self.assertEqual('1990-12-31', reply.date)
+        self.assertEqual(datetime.datetime(1990, 12, 31, 0, 0), reply.date)
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file2', reply.file_path)
 
