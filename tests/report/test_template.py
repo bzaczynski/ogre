@@ -170,6 +170,24 @@ class TestFrontSide(unittest.TestCase):
             mock.call.cell(5, 1, 'TAK', HAlign.CENTER, VAlign.MIDDLE)
         ])
 
+    @mock.patch('ogre.report.template.config')
+    def test_should_not_show_time_by_default(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value=None)
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertFalse(front_side._should_show_time())
+
+    @mock.patch('ogre.report.template.config')
+    def test_should_not_show_time_explicit(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value='fAlSe')
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertFalse(front_side._should_show_time())
+
+    @mock.patch('ogre.report.template.config')
+    def test_should_show_time(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value='tRUe')
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertTrue(front_side._should_show_time())
+
 
 class TestRearSide(unittest.TestCase):
 

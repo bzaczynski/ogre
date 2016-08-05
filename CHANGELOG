@@ -8,6 +8,9 @@
     > seconds in their XML responses, which made the string very long, e.g.
     > `2016-08-01T12:30:30.8929287+02:00` vs. `2016-08-01`.
 
+* Add a configuration flag `show_time` to enable rendering of full date
+  with time component (turned off by default).
+
 ## 1.0.0rc2
 
 * Sort person debtors by last name first using UCA collation.

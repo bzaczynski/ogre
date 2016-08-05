@@ -136,7 +136,7 @@ class FrontSide(PageSide):
             date = replies[bank].date_string
             time = replies[bank].time_string
 
-            if time:
+            if time and self._should_show_time():
                 table.cell(3, row, date, HAlign.CENTER, VAlign.TOP, padding=2)
                 table.cell(3, row, time, HAlign.CENTER, VAlign.BOTTOM, padding=2)
             else:
@@ -155,6 +155,13 @@ class FrontSide(PageSide):
                 self._canvas.pop_state()
 
         self._canvas.pop_state()
+
+    def _should_show_time(self):
+        """Return True if the time component of a date should be rendered."""
+        show_time = config().get('template', 'show_time')
+        if show_time:
+            return show_time.lower() == 'true'
+        return False
 
 
 class RearSide(PageSide):
