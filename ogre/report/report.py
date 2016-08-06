@@ -27,8 +27,6 @@ PDF report based on XML replies.
 import os
 import logging
 
-import pyuca
-
 from ogre.pdf import Document
 from ogre.config import config
 from ogre.report.template import Template

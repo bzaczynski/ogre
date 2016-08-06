@@ -29,6 +29,8 @@ import xmltodict
 
 from collections import namedtuple
 
+import dateutil.parser
+
 
 Id = namedtuple('Id', 'name value')
 NaturalPerson = namedtuple('NaturalPerson', 'first_name last_name id has_account')
@@ -87,8 +89,12 @@ class BankReplyParser(object):
 
     @property
     def date(self):
-        """Return the date of the reply in text as it appears."""
-        return self._xml.get('/ePismo/@dataPisma')
+        """Return parsed datetime or the original string of the reply."""
+        text = self._xml.get('/ePismo/@dataPisma')
+        try:
+            return dateutil.parser.parse(text)
+        except (AttributeError, ValueError):
+            return text
 
     @property
     def bank_code(self):

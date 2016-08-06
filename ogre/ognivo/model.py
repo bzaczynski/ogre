@@ -26,6 +26,7 @@ Data model used to organize and group bank replies by debtor.
 
 import collections
 import logging
+import datetime
 
 import pyuca
 
@@ -60,10 +61,30 @@ class Reply(object):
     """Information whether debtor has an account in the given bank."""
 
     def __init__(self, bank, date, has_account, file_path):
+
+        assert isinstance(date, (basestring, datetime.datetime)), \
+            'expected datetime.datetime or string'
+
         self.bank = bank
         self.date = date
         self.has_account = has_account
         self.file_path = file_path
+
+    @property
+    def date_string(self):
+        """Return formatted date or the original string."""
+        if isinstance(self.date, datetime.datetime):
+            naive_datetime = self.date.replace(tzinfo=None)
+            return naive_datetime.strftime('%Y-%m-%d')
+        return self.date
+
+    @property
+    def time_string(self):
+        """Return formatted time or None."""
+        if isinstance(self.date, datetime.datetime):
+            naive_datetime = self.date.replace(tzinfo=None)
+            if naive_datetime.time() != datetime.time(0, 0):
+                return naive_datetime.strftime('%H:%M')
 
     def __repr__(self):
         return unicode(self).encode('utf-8')
@@ -71,7 +92,7 @@ class Reply(object):
     def __unicode__(self):
         fmt = u'Reply(bank="{}", date="{}", has_account={}, file_path="{}")'
         return fmt.format(self.bank,
-                          self.date,
+                          self.date.isoformat() if self.date else '',
                           str(self.has_account).lower(),
                           self.file_path)
 

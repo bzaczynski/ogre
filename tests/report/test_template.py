@@ -3,6 +3,8 @@ import mock
 
 import collections
 
+import dateutil.parser
+
 from freezegun import freeze_time
 
 import ogre.config
@@ -139,11 +141,13 @@ class TestFrontSide(unittest.TestCase):
         bank2.name = 'Dolor Bank'
 
         reply1 = mock.Mock()
-        reply1.date = '1970-01-01'
+        reply1.date_string = '1970-01-01'
+        reply1.time_string = None
         reply1.has_account = True
 
         reply2 = mock.Mock()
-        reply2.date = '1980-01-01+02:00'
+        reply2.date_string = '1980-01-01'
+        reply2.time_string = None
         reply2.has_account = False
 
         replies = {
@@ -158,13 +162,31 @@ class TestFrontSide(unittest.TestCase):
         mock_table.return_value.assert_has_calls([
             mock.call.cell(0, 0, 'Dolor Bank'),
             mock.call.cell(0, 0, '302', HAlign.RIGHT, VAlign.BOTTOM),
-            mock.call.cell(3, 0, '1980-01-01+02:00', HAlign.CENTER, VAlign.MIDDLE),
+            mock.call.cell(3, 0, '1980-01-01', HAlign.CENTER, VAlign.MIDDLE),
             mock.call.cell(5, 0, 'NIE', HAlign.CENTER, VAlign.MIDDLE),
             mock.call.cell(0, 1, 'Lorem Bank'),
             mock.call.cell(0, 1, '001', HAlign.RIGHT, VAlign.BOTTOM),
             mock.call.cell(3, 1, '1970-01-01', HAlign.CENTER, VAlign.MIDDLE),
             mock.call.cell(5, 1, 'TAK', HAlign.CENTER, VAlign.MIDDLE)
         ])
+
+    @mock.patch('ogre.report.template.config')
+    def test_should_not_show_time_by_default(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value=None)
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertFalse(front_side._should_show_time())
+
+    @mock.patch('ogre.report.template.config')
+    def test_should_not_show_time_explicit(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value='fAlSe')
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertFalse(front_side._should_show_time())
+
+    @mock.patch('ogre.report.template.config')
+    def test_should_show_time(self, mock_config):
+        mock_config.return_value.get = mock.Mock(return_value='tRUe')
+        front_side = FrontSide(mock.Mock(), mock.Mock())
+        self.assertTrue(front_side._should_show_time())
 
 
 class TestRearSide(unittest.TestCase):

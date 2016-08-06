@@ -1,7 +1,10 @@
 import unittest
 import mock
 
+import datetime
 import StringIO
+
+from dateutil.tz import tzoffset
 
 from ogre.ognivo.parser import BankReplyParser, LegalEntity, NaturalPerson, Id
 from ogre.ognivo.parser import XmlDocument, XmlElement
@@ -32,7 +35,7 @@ class TestBankReplyParser(unittest.TestCase):
 
         parser = BankReplyParser('/path/to/file.xml')
 
-        self.assertEqual('2016-12-31', parser.date)
+        self.assertEqual(datetime.datetime(2016, 12, 31, 0, 0), parser.date)
         self.assertEqual('12345678', parser.bank_code)
         self.assertListEqual([], list(parser.entities))
 
@@ -259,6 +262,39 @@ class TestBankReplyParser(unittest.TestCase):
         self.assertEqual(
             u'G\u0119\u015bl\u0105-Ja\u017a\u0144',
             list(parser.entities).pop().last_name)
+
+    @mock.patch('codecs.open')
+    def test_should_return_none_if_date_is_missing(self, mock_open):
+        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo />')
+        parser = BankReplyParser('/path/to/file.xml')
+        self.assertIsNone(parser.date)
+
+    @mock.patch('codecs.open')
+    def test_should_return_original_string_if_date_cannot_be_parsed(self, mock_open):
+        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="lorem"/>')
+        parser = BankReplyParser('/path/to/file.xml')
+        self.assertEqual('lorem', parser.date)
+
+    @mock.patch('codecs.open')
+    def test_should_return_naive_date(self, mock_open):
+        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-04"/>')
+        parser = BankReplyParser('/path/to/file.xml')
+        self.assertIsInstance(parser.date, datetime.datetime)
+        self.assertEqual(datetime.datetime(2016, 8, 4, 0, 0), parser.date)
+
+    @mock.patch('codecs.open')
+    def test_should_return_naive_date_and_time(self, mock_open):
+        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-01T12:01:05.306000"/>')
+        parser = BankReplyParser('/path/to/file.xml')
+        self.assertIsInstance(parser.date, datetime.datetime)
+        self.assertEqual(datetime.datetime(2016, 8, 1, 12, 1, 5, 306000), parser.date)
+
+    @mock.patch('codecs.open')
+    def test_should_return_date_and_time_with_timezone(self, mock_open):
+        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-01T12:30:30.8929287+02:00"/>')
+        parser = BankReplyParser('/path/to/file.xml')
+        self.assertIsInstance(parser.date, datetime.datetime)
+        self.assertEqual(datetime.datetime(2016, 8, 1, 12, 30, 30, 892928, tzinfo=tzoffset(None, 7200)), parser.date)
 
 
 class TestXmlDocument(unittest.TestCase):
