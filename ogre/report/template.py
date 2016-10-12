@@ -25,7 +25,9 @@ Template for a single sheet of paper of the report.
 """
 
 import abc
+import math
 import datetime
+import collections
 
 from ogre.config import config
 
@@ -33,6 +35,7 @@ from ogre.pdf import FontFamily
 from ogre.pdf import FontWeight
 from ogre.pdf import HAlign, VAlign
 from ogre.pdf import Table, TableAlign, Header, Column
+from ogre.pdf.table import _Table
 
 
 class Template(object):
@@ -44,8 +47,13 @@ class Template(object):
 
     def render(self, debtor, replies):
         """Fill the template with debtor and render it onto the canvas."""
-        FrontSide(self._canvas, self._watermark).render(debtor, replies)
-        RearSide(self._canvas, self._watermark).render()
+
+        front_side = FrontSide(self._canvas, self._watermark)
+        rear_side = RearSide(self._canvas, self._watermark)
+
+        for chunk in chunked(replies, front_side.num_rows):
+            front_side.render(debtor, chunk)
+            rear_side.render()
 
 
 class PageSide(object):
@@ -58,18 +66,29 @@ class PageSide(object):
         self._canvas = canvas
         self._watermark = watermark
 
+    @property
+    def num_rows(self):
+        """Return the number of rows in the table."""
+        return _Table(**self._params('123456')).num_rows
+
     def _render_table(self, column_titles):
         """Render and return table placeholder with the given column titles."""
+        return Table(**self._params(column_titles))
+
+    def _params(self, column_titles):
+        """Return a dict with table's constructor parameters."""
         column_widths = (40, 25, 30, 25, 30, 25)
-        return Table(
-            self._canvas,
-            Header(
+        return dict(
+            canvas=self._canvas,
+            header=Header(
                 height=15,
                 columns=[
                     Column(w, t) for w, t in zip(column_widths, column_titles)
-                ]),
+                ]
+            ),
             row_height=11,
-            align=TableAlign(top=10, bottom=10))
+            align=TableAlign(top=10, bottom=10)
+        )
 
 
 class FrontSide(PageSide):
@@ -78,7 +97,7 @@ class FrontSide(PageSide):
     def __init__(self, canvas, watermark):
         super(FrontSide, self).__init__(canvas, watermark)
 
-    def render(self, debtor, replies):
+    def render(self, debtor, chunk):
         """Render the front side of the current sheet of paper."""
 
         if self._canvas.num_pages > 1:
@@ -94,10 +113,14 @@ class FrontSide(PageSide):
             u'Podpis odbieraj\u0105cego odpowied\u017a',
             u'Rodzaj odpowiedzi'])
 
-        self._render_title(debtor, table)
-        self._render_replies(replies, table)
+        prefix = ''
+        if chunk.count > 1:
+            prefix = '({num}/{count}) '.format(**vars(chunk))
 
-    def _render_title(self, debtor, table):
+        self._render_title(debtor, table, prefix)
+        self._render_replies(chunk.data, table)
+
+    def _render_title(self, debtor, table, prefix):
         """Render front side page title."""
 
         self._canvas.push_state()
@@ -111,7 +134,7 @@ class FrontSide(PageSide):
 
         x = self._canvas.text('Ognivo: ', table.x, y)
         self._canvas.font.weight = FontWeight.NORMAL
-        self._canvas.text(debtor.name, x, y)
+        self._canvas.text(prefix + debtor.name, x, y)
 
         self._canvas.font.weight = FontWeight.NORMAL
         text = u'{} # {}'.format(debtor.identity.name, debtor.identity.value)
@@ -227,3 +250,17 @@ class Watermark(object):
         """Return a dict with {year, month, date} of local date."""
         today = datetime.date.today()
         return {key: getattr(today, key) for key in ('year', 'month', 'day')}
+
+
+def chunked(data, size):
+    """Return an iterator over data with the given size of chunks."""
+
+    Chunk = collections.namedtuple('Chunk', 'num count data')
+    ordered_keys = sorted(data, key=lambda x: x.name)
+
+    num_chunks = int(math.ceil(len(data) / float(size)))
+    for chunk_num, i in enumerate(xrange(0, len(data), size), 1):
+        chunk_keys = ordered_keys[i:i + size]
+        yield Chunk(chunk_num, num_chunks, {
+            k: v for k, v in data.iteritems() if k in chunk_keys
+        })

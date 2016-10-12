@@ -3,8 +3,6 @@ import mock
 
 import collections
 
-import dateutil.parser
-
 from freezegun import freeze_time
 
 import ogre.config
@@ -12,7 +10,10 @@ import ogre.config
 from ogre.pdf.canvas import Canvas
 from ogre.pdf import HAlign, VAlign
 from ogre.config import Config
-from ogre.report.template import Template, FrontSide, RearSide, Watermark
+from ogre.report.template import Template, FrontSide, RearSide, Watermark, chunked
+
+
+Chunk = collections.namedtuple('Chunk', 'num count data')
 
 
 class TestTemplate(unittest.TestCase):
@@ -24,7 +25,7 @@ class TestTemplate(unittest.TestCase):
 
         template = Template(Canvas())
 
-        template.render(mock.Mock(), mock.Mock())
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
 
         mock_front.return_value.render.assert_called_once_with(mock.ANY, mock.ANY)
         mock_rear.return_value.render.assert_called_once()
@@ -38,9 +39,12 @@ class TestFrontSide(unittest.TestCase):
         self.mock_debtor.identity.name = 'PESEL'
         self.mock_debtor.identity.value = '12345678901'
 
+    def test_should_compute_number_of_rows(self):
+        self.assertEqual(23, FrontSide(Canvas(), mock.Mock()).num_rows)
+
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
     def test_should_not_add_page_if_document_has_no_previous_pages(self, mock_add_page):
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, {})
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
         mock_add_page.assert_not_called()
 
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
@@ -49,13 +53,13 @@ class TestFrontSide(unittest.TestCase):
         canvas = Canvas()
         canvas.add_page()
 
-        FrontSide(canvas, mock.Mock()).render(self.mock_debtor, {})
+        FrontSide(canvas, mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
 
         mock_add_page.assert_called_once()
 
     def test_should_render_watermark(self):
         mock_watermark = mock.Mock()
-        FrontSide(Canvas(), mock_watermark).render(self.mock_debtor, {})
+        FrontSide(Canvas(), mock_watermark).render(self.mock_debtor, Chunk(1, 1, {}))
         mock_watermark.render.assert_called_once_with(mock.ANY)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
@@ -63,7 +67,7 @@ class TestFrontSide(unittest.TestCase):
 
         mock_canvas.return_value.stringWidth.return_value = 999
 
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, {})
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
 
         # body
         mock_canvas.return_value.assert_has_calls([
@@ -99,7 +103,7 @@ class TestFrontSide(unittest.TestCase):
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_title(self, mock_canvas):
 
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, {})
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
 
         mock_canvas.return_value.beginText.return_value.assert_has_calls([
 
@@ -150,10 +154,10 @@ class TestFrontSide(unittest.TestCase):
         reply2.time_string = None
         reply2.has_account = False
 
-        replies = {
+        replies = Chunk(1, 1, {
             bank1: reply1,
             bank2: reply2,
-        }
+        })
 
         mock_table.return_value.width = 10
 
@@ -230,6 +234,9 @@ class TestRearSide(unittest.TestCase):
             mock.call.setLineWidth(0.2834645669291339),
             mock.call.grid([49.60629921259835, 162.9921259842519, 233.85826771653538, 318.89763779527556, 389.763779527559, 474.8031496062992, 545.6692913385826], [758.2677165354331, 727.0866141732284, 695.9055118110236, 664.7244094488188, 633.5433070866142, 602.3622047244095, 571.1811023622047, 540.0, 508.81889763779526, 477.6377952755905, 446.4566929133858, 415.27559055118104, 384.09448818897636, 352.9133858267716, 321.7322834645669, 290.55118110236214, 259.37007874015745, 228.1889763779527, 197.00787401574797, 165.82677165354323, 134.64566929133852, 103.46456692913371, 72.28346456692898, 41.10236220472425])
         ])
+
+    def test_should_compute_number_of_rows(self):
+        self.assertEqual(23, RearSide(Canvas(), mock.Mock()).num_rows)
 
     def test_should_render_watermark(self):
         mock_watermark = mock.Mock()
@@ -335,3 +342,85 @@ class TestWatermark(unittest.TestCase):
             mock.call.set_default_state(),
             mock.call.text(u'year=1970 month=1 day=1', 0, 2, mock.ANY, halign=HAlign.CENTER),
             mock.call.pop_state()])
+
+
+class TestChunked(unittest.TestCase):
+
+    def make_items(self, **kwargs):
+        return {Fake(k): v for k, v in kwargs.iteritems()}
+
+    def test_should_return_empty_generator(self):
+        with self.assertRaises(StopIteration):
+            next(chunked({}, size=100))
+
+    def test_should_fit_all_items_into_one_chunk(self):
+
+        items = self.make_items(first=1, second=2, third=3)
+
+        chunks = list(chunked(items, 3))
+
+        self.assertEqual(1, len(chunks))
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(1, chunks[0].count)
+        self.assertDictEqual(items, chunks[0].data)
+
+    def test_should_fit_items_into_equally_sized_chunks(self):
+
+        items = self.make_items(a=1, b=2, c=3, d=4, e=5, f=6)
+
+        chunks = list(chunked(items, 3))
+
+        self.assertEqual(2, len(chunks))
+
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(2, chunks[0].count)
+        self.assertDictEqual({
+            Fake(name='a'): 1,
+            Fake(name='b'): 2,
+            Fake(name='c'): 3
+        }, chunks[0].data)
+
+        self.assertEqual(2, chunks[1].num)
+        self.assertEqual(2, chunks[1].count)
+        self.assertDictEqual({
+            Fake(name='d'): 4,
+            Fake(name='e'): 5,
+            Fake(name='f'): 6
+        }, chunks[1].data)
+
+    def test_should_fit_items_into_unequally_sized_chunks(self):
+        items = self.make_items(a=1, b=2, c=3, d=4, e=5, f=6, g=7)
+
+        chunks = list(chunked(items, 2))
+
+        self.assertEqual(4, len(chunks))
+
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(4, chunks[0].count)
+        self.assertDictEqual({
+            Fake(name='a'): 1,
+            Fake(name='b'): 2
+        }, chunks[0].data)
+
+        self.assertEqual(2, chunks[1].num)
+        self.assertEqual(4, chunks[1].count)
+        self.assertDictEqual({
+            Fake(name='c'): 3,
+            Fake(name='d'): 4
+        }, chunks[1].data)
+
+        self.assertEqual(3, chunks[2].num)
+        self.assertEqual(4, chunks[2].count)
+        self.assertDictEqual({
+            Fake(name='e'): 5,
+            Fake(name='f'): 6
+        }, chunks[2].data)
+
+        self.assertEqual(4, chunks[3].num)
+        self.assertEqual(4, chunks[3].count)
+        self.assertDictEqual({
+            Fake(name='g'): 7,
+        }, chunks[3].data)
+
+
+Fake = collections.namedtuple('Fake', 'name')

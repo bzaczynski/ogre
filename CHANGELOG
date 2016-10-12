@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0rc4
+
+* Paginate bank replies if they don't fit into a single page.
+* Add pagination indicator next to debtor name, e.g. "(1/3)".
+
 ## 1.0.0rc3
 
 * Parse and format datetime to fit the cells in the resulting PDF document.
