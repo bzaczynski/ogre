@@ -345,5 +345,82 @@ class TestWatermark(unittest.TestCase):
 
 
 class TestChunked(unittest.TestCase):
-    pass  # TODO
 
+    def make_items(self, **kwargs):
+        return {Fake(k): v for k, v in kwargs.iteritems()}
+
+    def test_should_return_empty_generator(self):
+        with self.assertRaises(StopIteration):
+            next(chunked({}, size=100))
+
+    def test_should_fit_all_items_into_one_chunk(self):
+
+        items = self.make_items(first=1, second=2, third=3)
+
+        chunks = list(chunked(items, 3))
+
+        self.assertEqual(1, len(chunks))
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(1, chunks[0].count)
+        self.assertDictEqual(items, chunks[0].data)
+
+    def test_should_fit_items_into_equally_sized_chunks(self):
+
+        items = self.make_items(a=1, b=2, c=3, d=4, e=5, f=6)
+
+        chunks = list(chunked(items, 3))
+
+        self.assertEqual(2, len(chunks))
+
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(2, chunks[0].count)
+        self.assertDictEqual({
+            Fake(name='a'): 1,
+            Fake(name='b'): 2,
+            Fake(name='c'): 3
+        }, chunks[0].data)
+
+        self.assertEqual(2, chunks[1].num)
+        self.assertEqual(2, chunks[1].count)
+        self.assertDictEqual({
+            Fake(name='d'): 4,
+            Fake(name='e'): 5,
+            Fake(name='f'): 6
+        }, chunks[1].data)
+
+    def test_should_fit_items_into_unequally_sized_chunks(self):
+        items = self.make_items(a=1, b=2, c=3, d=4, e=5, f=6, g=7)
+
+        chunks = list(chunked(items, 2))
+
+        self.assertEqual(4, len(chunks))
+
+        self.assertEqual(1, chunks[0].num)
+        self.assertEqual(4, chunks[0].count)
+        self.assertDictEqual({
+            Fake(name='a'): 1,
+            Fake(name='b'): 2
+        }, chunks[0].data)
+
+        self.assertEqual(2, chunks[1].num)
+        self.assertEqual(4, chunks[1].count)
+        self.assertDictEqual({
+            Fake(name='c'): 3,
+            Fake(name='d'): 4
+        }, chunks[1].data)
+
+        self.assertEqual(3, chunks[2].num)
+        self.assertEqual(4, chunks[2].count)
+        self.assertDictEqual({
+            Fake(name='e'): 5,
+            Fake(name='f'): 6
+        }, chunks[2].data)
+
+        self.assertEqual(4, chunks[3].num)
+        self.assertEqual(4, chunks[3].count)
+        self.assertDictEqual({
+            Fake(name='g'): 7,
+        }, chunks[3].data)
+
+
+Fake = collections.namedtuple('Fake', 'name')
