@@ -48,19 +48,6 @@ class Template(object):
     def render(self, debtor, replies):
         """Fill the template with debtor and render it onto the canvas."""
 
-        def chunked(data, size):
-            """Return an iterator over data with the given size of chunks."""
-
-            Chunk = collections.namedtuple('Chunk', 'num count data')
-            ordered_keys = sorted(replies, key=lambda x: x.name)
-
-            num_chunks = int(math.ceil(len(data) / float(size)))
-            for chunk_num, i in enumerate(xrange(0, len(data), size), 1):
-                chunk_keys = ordered_keys[i:i + size]
-                yield Chunk(chunk_num, num_chunks, {
-                    k: v for k, v in replies.iteritems() if k in chunk_keys
-                })
-
         front_side = FrontSide(self._canvas, self._watermark)
         rear_side = RearSide(self._canvas, self._watermark)
 
@@ -263,3 +250,17 @@ class Watermark(object):
         """Return a dict with {year, month, date} of local date."""
         today = datetime.date.today()
         return {key: getattr(today, key) for key in ('year', 'month', 'day')}
+
+
+def chunked(data, size):
+    """Return an iterator over data with the given size of chunks."""
+
+    Chunk = collections.namedtuple('Chunk', 'num count data')
+    ordered_keys = sorted(data, key=lambda x: x.name)
+
+    num_chunks = int(math.ceil(len(data) / float(size)))
+    for chunk_num, i in enumerate(xrange(0, len(data), size), 1):
+        chunk_keys = ordered_keys[i:i + size]
+        yield Chunk(chunk_num, num_chunks, {
+            k: v for k, v in data.iteritems() if k in chunk_keys
+        })
