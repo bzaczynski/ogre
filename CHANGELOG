@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0rc1
+
+* Add a configuration flag `show_rear` to render rear side (false by default).
+
 ## 1.0.0rc4
 
 * Paginate bank replies if they don't fit into a single page.
