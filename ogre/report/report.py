@@ -47,7 +47,7 @@ class Report(object):
 
     def save(self, path):
         """Return true upon successful save to a given file path."""
-        if self._rendered and self._document.canvas.num_pages > 1:
+        if self._rendered and self._document.canvas.num_pages > 0:
             self._document.save(path)
             logger.info(u'Saved file as %s', os.path.abspath(path))
             return True

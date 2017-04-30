@@ -19,6 +19,14 @@ class TestReport(unittest.TestCase):
         mock_logger.assert_has_calls([mock.call.error(u'There are no pages to be rendered')])
 
     @mock.patch('ogre.report.report.logger')
+    def test_should_return_false_and_log_error_on_save_when_no_pages_rendered(self, mock_logger):
+        mock_model = mock.Mock(banks=[], debtors=[], sorted_debtors=[], replies={'foo': 'bar'})
+        self.assertFalse(Report(mock_model).save('/path/to/file'))
+        mock_logger.assert_has_calls([
+            mock.call.info(u'Please wait while generating report...'),
+            mock.call.error(u'There are no pages to be rendered')])
+
+    @mock.patch('ogre.report.report.logger')
     def test_should_return_true_on_successful_save(self, mock_logger):
 
         report = Report(self.mock_model)
