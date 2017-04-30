@@ -53,7 +53,15 @@ class Template(object):
 
         for chunk in chunked(replies, front_side.num_rows):
             front_side.render(debtor, chunk)
-            rear_side.render()
+            if self._should_show_rear():
+                rear_side.render()
+
+    def _should_show_rear(self):
+        """Return True if the rear page should be rendered."""
+        show_rear = config().get('template', 'show_rear')
+        if show_rear:
+            return show_rear.lower() == 'true'
+        return False
 
 
 class PageSide(object):
@@ -100,8 +108,7 @@ class FrontSide(PageSide):
     def render(self, debtor, chunk):
         """Render the front side of the current sheet of paper."""
 
-        if self._canvas.num_pages > 1:
-            self._canvas.add_page()
+        self._canvas.add_page()
 
         self._watermark.render(self._canvas)
 

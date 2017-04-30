@@ -97,12 +97,19 @@ class TestCanvas(unittest.TestCase):
         mock_open.assert_called_once_with('/path/to/file', 'wb')
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas.showPage')
-    def test_should_insert_page_break(self, mock_show_page):
+    def test_should_not_insert_page_break_when_no_other_pages(self, mock_show_page):
         Canvas().add_page()
+        self.assertFalse(mock_show_page.called)
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas.showPage')
+    def test_should_insert_page_break(self, mock_show_page):
+        canvas = Canvas()
+        canvas.add_page()
+        canvas.add_page()
         mock_show_page.assert_called_once_with()
 
     def test_should_return_initial_page_count(self):
-        self.assertEqual(1, Canvas().num_pages)
+        self.assertEqual(0, Canvas().num_pages)
 
     def test_should_return_updated_page_count(self):
 
@@ -112,12 +119,21 @@ class TestCanvas(unittest.TestCase):
         canvas.add_page()
         canvas.add_page()
 
-        self.assertEqual(4, canvas.num_pages)
+        self.assertEqual(3, canvas.num_pages)
+
+    @mock.patch('ogre.pdf.line.Fill.apply')
+    @mock.patch('ogre.pdf.line.Stroke.apply')
+    def test_should_not_restore_state_on_zeroth_page(self, mock_stroke_apply, mock_fill_apply):
+        Canvas().add_page()
+        self.assertFalse(mock_stroke_apply.called)
+        self.assertFalse(mock_fill_apply.called)
 
     @mock.patch('ogre.pdf.line.Fill.apply')
     @mock.patch('ogre.pdf.line.Stroke.apply')
     def test_should_restore_state_on_add_page(self, mock_stroke_apply, mock_fill_apply):
-        Canvas().add_page()
+        canvas = Canvas()
+        canvas.add_page()
+        canvas.add_page()
         self.assertTrue(mock_stroke_apply.called)
         self.assertTrue(mock_fill_apply.called)
 

@@ -21,7 +21,22 @@ class TestTemplate(unittest.TestCase):
     @mock.patch('ogre.report.template.Watermark')
     @mock.patch('ogre.report.template.RearSide')
     @mock.patch('ogre.report.template.FrontSide')
-    def test_should_render_front_and_back_side(self, mock_front, mock_rear, mock_watermark):
+    def test_should_render_only_front_side_by_default(self, mock_front, mock_rear, mock_watermark):
+
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        self.assertTrue(mock_front.return_value.render.called)
+        self.assertFalse(mock_rear.return_value.render.called)
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.Watermark')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    def test_should_render_front_and_back_side(self, mock_front, mock_rear, mock_watermark, mock_config):
+
+        mock_config.return_value.get = mock.Mock(return_value='true')
 
         template = Template(Canvas())
 
@@ -43,9 +58,9 @@ class TestFrontSide(unittest.TestCase):
         self.assertEqual(23, FrontSide(Canvas(), mock.Mock()).num_rows)
 
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
-    def test_should_not_add_page_if_document_has_no_previous_pages(self, mock_add_page):
+    def test_should_add_page_if_document_has_no_previous_pages(self, mock_add_page):
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
-        mock_add_page.assert_not_called()
+        mock_add_page.assert_called_once_with()
 
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
     def test_should_add_page_if_document_has_previous_pages(self, mock_add_page):
@@ -55,7 +70,7 @@ class TestFrontSide(unittest.TestCase):
 
         FrontSide(canvas, mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
 
-        mock_add_page.assert_called_once()
+        self.assertEqual(mock_add_page.call_count, 2)
 
     def test_should_render_watermark(self):
         mock_watermark = mock.Mock()
@@ -196,9 +211,17 @@ class TestFrontSide(unittest.TestCase):
 class TestRearSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_not_add_new_page_before_rendering_first_page(self, mock_canvas):
+        RearSide(Canvas(), mock.Mock()).render()
+        self.assertNotIn(mock.call.showPage(), mock_canvas.return_value.mock_calls)
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_add_new_page_before_rendering(self, mock_canvas):
 
-        RearSide(Canvas(), mock.Mock()).render()
+        canvas = Canvas()
+        canvas.add_page()
+
+        RearSide(canvas, mock.Mock()).render()
 
         mock_canvas.return_value.assert_has_calls([
             mock.call.showPage(),

@@ -57,6 +57,7 @@ class Canvas(object):
         self._viewport = reportlab.pdfgen.canvas.Canvas(self._buffer, size)
         self._width, self._height = size
         self._state = State(self._viewport)
+        self._num_pages = 0
 
     def __setattr__(self, key, value):
         if key.startswith('_'):
@@ -67,7 +68,7 @@ class Canvas(object):
     @property
     def num_pages(self):
         """Return the number of pages in the document."""
-        return self._viewport.getPageNumber()
+        return self._num_pages
 
     @property
     def width(self):
@@ -113,9 +114,13 @@ class Canvas(object):
 
     def add_page(self):
         """Insert page break to append a new page into the document."""
-        self._viewport.showPage()
-        self.stroke.apply()
-        self.fill.apply()
+
+        if self._num_pages > 0:
+            self._viewport.showPage()
+            self.stroke.apply()
+            self.fill.apply()
+
+        self._num_pages += 1
 
     def push_state(self):
         """Save the current graphics state to be restored later."""
