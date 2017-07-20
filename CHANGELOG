@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1rc1
+
+* Trim leading zeros in identities such as PESEL, NIP, REGON.
+
+    > Some banks send IDs with leading zeros while others don't,
+    > which results in treating the same debtor as separate ones.
+
 ## 1.1.0rc1
 
 * Add a configuration flag `show_rear` to render rear side (false by default).

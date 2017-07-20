@@ -25,6 +25,14 @@ class TestIdentity(unittest.TestCase):
         self.assertEqual(u'ZA\u017b\xd3\u0141\u0106', self.identity.name)
         self.assertEqual(u'g\u0119\u015bl\u0105', self.identity.value)
 
+    def test_should_trim_leading_zeros_if_string(self):
+        identity = Identity('name', 3.1415)
+        self.assertEqual(3.1415, identity.value)
+
+    def test_should_retain_non_string_value(self):
+        identity = Identity('name', '000value00')
+        self.assertEqual('value00', identity.value)
+
     def test_should_be_immutable(self):
 
         id1 = Identity('NIP', '123')
@@ -370,7 +378,7 @@ class TestModel(unittest.TestCase):
 
     JAN_KOWALSKI = NaturalPerson('Jan', 'Kowalski', Id('PESEL', '12345678900'), False)
     JAN_KOWALSKI_2 = NaturalPerson('JAN', 'KOWALSKI', Id('PESEL', '12345678900'), True)
-    ANNA_NOWAK = NaturalPerson('Anna', 'Nowak', Id('PESEL', '00987654321'), True)
+    ANNA_NOWAK = NaturalPerson('Anna', 'Nowak', Id('PESEL', '98765432100'), True)
     FIRMA_1 = LegalEntity('Firma Sp. z O.O.', Id('NIP', '1234567890'), False)
     FIRMA_2 = LegalEntity('Amber Scam Sp. z O.O.', Id('REGON', '123456789'), True)
 
@@ -579,7 +587,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual('Anna Nowak', debtor1.name)
         self.assertEqual('PESEL', debtor1.identity.name)
-        self.assertEqual('00987654321', debtor1.identity.value)
+        self.assertEqual('98765432100', debtor1.identity.value)
 
         self.assertEqual('Firma Sp. z O.O.', debtor2.name)
         self.assertEqual('NIP', debtor2.identity.name)
@@ -656,7 +664,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual('Anna Nowak', debtor2.name)
         self.assertEqual('PESEL', debtor2.identity.name)
-        self.assertEqual('00987654321', debtor2.identity.value)
+        self.assertEqual('98765432100', debtor2.identity.value)
 
         self.assertEqual('Firma Sp. z O.O.', debtor3.name)
         self.assertEqual('NIP', debtor3.identity.name)
@@ -1116,7 +1124,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual('Anna Nowak', debtor2.name)
         self.assertEqual('PESEL', debtor2.identity.name)
-        self.assertEqual('00987654321', debtor2.identity.value)
+        self.assertEqual('98765432100', debtor2.identity.value)
 
 
 class TestGetBankNameAndPrefix(unittest.TestCase):

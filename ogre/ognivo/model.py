@@ -41,7 +41,8 @@ class Identity(object):
 
     def __init__(self, name, value):
         self.name = name.upper()
-        self.value = value
+        self.value = value.lstrip('0') \
+            if isinstance(value, basestring) else value
 
     def __hash__(self):
         return hash((self.name, self.value))
