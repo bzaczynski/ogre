@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Bartosz Zaczynski
+# Copyright (c) 2017 Bartosz Zaczynski
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,4 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__version__ = '1.1.1rc1'
+# Usage:
+# $ docker build -t ogre:linux -f Dockerfile.linux .
+# $ docker run --rm ogre:linux cat /root/ogre-$VERSION-linux.pex > ogre-$VERSION-linux.pex
+
+FROM python:2.7.13-alpine3.6
+
+WORKDIR /root
+COPY . /root
+
+RUN apk add --update --no-cache build-base python-dev py-pip jpeg-dev zlib-dev \
+ && pip install pex "setuptools<20.11,>=2.2" \
+ && python setup.py bdist_wheel install \
+ && export VERSION=`python -c "import ogre; print ogre.__version__"` \
+ && pex "ogre==$VERSION" -f dist -r requirements.txt -c ogreport.py -o "ogre-$VERSION-linux.pex"
