@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0rc1
+
+* Display page number on each page.
+
 ## 1.1.1rc1
 
 * Trim leading zeros in identities such as PESEL, NIP, REGON.

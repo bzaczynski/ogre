@@ -13,8 +13,8 @@ $ git clone https://github.com/bzaczynski/ogre.git
 Binary packages:
 
 
-* [Linux](https://www.dropbox.com/s/2mf5bzl3drno3ow/ogre-1.1.1rc1-linux.pex?dl=1)
-* [Windows](https://www.dropbox.com/s/u5iodn9i1h6p5aj/ogre-1.1.1rc1-windows.pex?dl=1)
+* [Linux](https://www.dropbox.com/s/TODO/ogre-1.2.0rc1-linux.pex?dl=1)
+* [Windows](https://www.dropbox.com/s/TODO/ogre-1.2.0rc1-windows.pex?dl=1)
 
 ### Requirements
 
@@ -191,7 +191,7 @@ Note that all three configuration sources can be used simultaneously. They are p
 
 **WARNING!**
 
-The name *ogre* is already taken by another project on [PyPI](https://pypi.python.org/pypi) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.1.1rc1* is given below.
+The name *ogre* is already taken by another project on [PyPI](https://pypi.python.org/pypi) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.2.0rc1* is given below.
 
 #### Linux
 
@@ -199,7 +199,7 @@ The name *ogre* is already taken by another project on [PyPI](https://pypi.pytho
 $ mkvirtualenv venv
 (venv) $ pip install pex "setuptools<20.11,>=2.2"
 (venv) $ python setup.py bdist_wheel
-(venv) $ pex "ogre==1.1.1rc1" -f dist -r requirements.txt -c ogreport.py -o ogre-1.1.1rc1-linux.pex
+(venv) $ pex "ogre==1.2.0rc1" -f dist -r requirements.txt -c ogreport.py -o ogre-1.2.0rc1-linux.pex
 ```
 
 #### Windows
@@ -210,7 +210,7 @@ C:\> virtualenv venv
 C:\> venv\Scripts\activate
 (venv) C:\> pip install pex
 (venv) C:\> python setup.py bdist_wheel
-(venv) C:\> pex "ogre==1.1.1rc1" -f dist -r requirements.txt -c ogreport.py -o ogre-1.1.1rc1-windows.pex
+(venv) C:\> pex "ogre==1.2.0rc1" -f dist -r requirements.txt -c ogreport.py -o ogre-1.2.0rc1-windows.pex
 ```
 
 ### Author

@@ -31,10 +31,9 @@ class TestTemplate(unittest.TestCase):
         self.assertFalse(mock_rear.return_value.render.called)
 
     @mock.patch('ogre.report.template.config')
-    @mock.patch('ogre.report.template.Watermark')
     @mock.patch('ogre.report.template.RearSide')
     @mock.patch('ogre.report.template.FrontSide')
-    def test_should_render_front_and_back_side(self, mock_front, mock_rear, mock_watermark, mock_config):
+    def test_should_render_front_and_back_side(self, mock_front, mock_rear, mock_config):
 
         mock_config.return_value.get = mock.Mock(return_value='true')
 
@@ -42,7 +41,7 @@ class TestTemplate(unittest.TestCase):
 
         template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
 
-        mock_front.return_value.render.assert_called_once_with(mock.ANY, mock.ANY)
+        mock_front.return_value.render.assert_called_once_with(mock.ANY, mock.ANY, 1)
         mock_rear.return_value.render.assert_called_once()
 
 
@@ -59,7 +58,7 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
     def test_should_add_page_if_document_has_no_previous_pages(self, mock_add_page):
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
         mock_add_page.assert_called_once_with()
 
     @mock.patch('ogre.pdf.canvas.Canvas.add_page')
@@ -68,13 +67,13 @@ class TestFrontSide(unittest.TestCase):
         canvas = Canvas()
         canvas.add_page()
 
-        FrontSide(canvas, mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
+        FrontSide(canvas, mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
         self.assertEqual(mock_add_page.call_count, 2)
 
     def test_should_render_watermark(self):
         mock_watermark = mock.Mock()
-        FrontSide(Canvas(), mock_watermark).render(self.mock_debtor, Chunk(1, 1, {}))
+        FrontSide(Canvas(), mock_watermark).render(self.mock_debtor, Chunk(1, 1, {}), 0)
         mock_watermark.render.assert_called_once_with(mock.ANY)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
@@ -82,7 +81,7 @@ class TestFrontSide(unittest.TestCase):
 
         mock_canvas.return_value.stringWidth.return_value = 999
 
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
         # body
         mock_canvas.return_value.assert_has_calls([
@@ -118,7 +117,7 @@ class TestFrontSide(unittest.TestCase):
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_title(self, mock_canvas):
 
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}))
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
         mock_canvas.return_value.beginText.return_value.assert_has_calls([
 
@@ -176,7 +175,7 @@ class TestFrontSide(unittest.TestCase):
 
         mock_table.return_value.width = 10
 
-        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, replies)
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, replies, 0)
 
         mock_table.return_value.assert_has_calls([
             mock.call.cell(0, 0, 'Dolor Bank'),
@@ -212,7 +211,7 @@ class TestRearSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_not_add_new_page_before_rendering_first_page(self, mock_canvas):
-        RearSide(Canvas(), mock.Mock()).render()
+        RearSide(Canvas(), mock.Mock()).render(0)
         self.assertNotIn(mock.call.showPage(), mock_canvas.return_value.mock_calls)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
@@ -221,7 +220,7 @@ class TestRearSide(unittest.TestCase):
         canvas = Canvas()
         canvas.add_page()
 
-        RearSide(canvas, mock.Mock()).render()
+        RearSide(canvas, mock.Mock()).render(0)
 
         mock_canvas.return_value.assert_has_calls([
             mock.call.showPage(),
@@ -263,7 +262,7 @@ class TestRearSide(unittest.TestCase):
 
     def test_should_render_watermark(self):
         mock_watermark = mock.Mock()
-        RearSide(Canvas(), mock_watermark).render()
+        RearSide(Canvas(), mock_watermark).render(0)
         mock_watermark.render.assert_called_once_with(mock.ANY)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
@@ -271,7 +270,7 @@ class TestRearSide(unittest.TestCase):
 
         mock_canvas.return_value.stringWidth.return_value = 999
 
-        RearSide(Canvas(), mock.Mock()).render()
+        RearSide(Canvas(), mock.Mock()).render(0)
 
         # body
         mock_canvas.return_value.assert_has_calls([
@@ -305,7 +304,7 @@ class TestRearSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas.beginText')
     def test_should_render_title(self, mock_obj):
-        RearSide(Canvas(), mock.Mock()).render()
+        RearSide(Canvas(), mock.Mock()).render(0)
         mock_obj.return_value.assert_has_calls([
             mock.call.setFont('FreeSansBold', 9.921259842519685, 11.905511811023622),
             mock.call.setTextRenderMode(0),
