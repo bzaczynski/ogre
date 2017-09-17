@@ -27,6 +27,7 @@ Template for a single sheet of paper of the report.
 import abc
 import math
 import datetime
+import itertools
 import collections
 
 from ogre.config import config
@@ -44,6 +45,7 @@ class Template(object):
     def __init__(self, canvas):
         self._canvas = canvas
         self._watermark = Watermark()
+        self._page_number = itertools.count(1)
 
     def render(self, debtor, replies):
         """Fill the template with debtor and render it onto the canvas."""
@@ -52,9 +54,9 @@ class Template(object):
         rear_side = RearSide(self._canvas, self._watermark)
 
         for chunk in chunked(replies, front_side.num_rows):
-            front_side.render(debtor, chunk)
+            front_side.render(debtor, chunk, next(self._page_number))
             if self._should_show_rear():
-                rear_side.render()
+                rear_side.render(next(self._page_number))
 
     def _should_show_rear(self):
         """Return True if the rear page should be rendered."""
@@ -83,6 +85,23 @@ class PageSide(object):
         """Render and return table placeholder with the given column titles."""
         return Table(**self._params(column_titles))
 
+    def _render_footer(self, page_number):
+        """Render footer at the bottom of the page."""
+
+        self._canvas.push_state()
+        self._canvas.set_default_state()
+
+        self._canvas.font.family = FontFamily.SANS
+        self._canvas.font.weight = FontWeight.NORMAL
+        self._canvas.font.size_mm = 2.5
+
+        self._canvas.text(
+            'Strona ' + str(page_number),
+            0, self._canvas.height - 8.5,
+            self._canvas.width, halign=HAlign.CENTER)
+
+        self._canvas.pop_state()
+
     def _params(self, column_titles):
         """Return a dict with table's constructor parameters."""
         column_widths = (40, 25, 30, 25, 30, 25)
@@ -105,7 +124,7 @@ class FrontSide(PageSide):
     def __init__(self, canvas, watermark):
         super(FrontSide, self).__init__(canvas, watermark)
 
-    def render(self, debtor, chunk):
+    def render(self, debtor, chunk, page_number):
         """Render the front side of the current sheet of paper."""
 
         self._canvas.add_page()
@@ -126,6 +145,7 @@ class FrontSide(PageSide):
 
         self._render_title(debtor, table, prefix)
         self._render_replies(chunk.data, table)
+        self._render_footer(page_number)
 
     def _render_title(self, debtor, table, prefix):
         """Render front side page title."""
@@ -200,7 +220,7 @@ class RearSide(PageSide):
     def __init__(self, canvas, watermark):
         super(RearSide, self).__init__(canvas, watermark)
 
-    def render(self):
+    def render(self, page_number):
         """Render the rear side of the current sheet of paper."""
 
         self._canvas.add_page()
@@ -216,6 +236,7 @@ class RearSide(PageSide):
             u'Uwagi'])
 
         self._render_title()
+        self._render_footer(page_number)
 
     def _render_title(self):
         """Render rear side page title."""
