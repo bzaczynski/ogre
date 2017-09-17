@@ -77,6 +77,20 @@ class TestFrontSide(unittest.TestCase):
         mock_watermark.render.assert_called_once_with(mock.ANY)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_render_footer_on_front_side(self, mock_canvas):
+        FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 555)
+        mock_canvas.return_value.beginText.return_value.assert_has_calls([
+            mock.call.textLine('Strona 555')
+        ])
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_render_footer_on_rear_side(self, mock_canvas):
+        RearSide(Canvas(), mock.Mock()).render(777)
+        mock_canvas.return_value.beginText.return_value.assert_has_calls([
+            mock.call.textLine('Strona 777')
+        ])
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_table(self, mock_canvas):
 
         mock_canvas.return_value.stringWidth.return_value = 999
