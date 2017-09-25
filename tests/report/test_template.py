@@ -10,7 +10,7 @@ import ogre.config
 from ogre.pdf.canvas import Canvas
 from ogre.pdf import HAlign, VAlign
 from ogre.config import Config
-from ogre.report.template import Template, FrontSide, RearSide, Watermark, chunked
+from ogre.report.template import Template, BlankPage, FrontSide, RearSide, Watermark, chunked
 
 
 Chunk = collections.namedtuple('Chunk', 'num count data')
@@ -43,6 +43,55 @@ class TestTemplate(unittest.TestCase):
 
         mock_front.return_value.render.assert_called_once_with(mock.ANY, mock.ANY, 1)
         mock_rear.return_value.render.assert_called_once()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    def test_should_render_blank_page_when_odd_number_of_chunks(self, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_config.return_value.get = mock.Mock(return_value='false')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_called_once()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    @mock.patch('ogre.report.template.chunked')
+    def test_should_not_render_blank_page_when_even_number_of_chunks(self, mock_chunked, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_chunked.return_value = ['one', 'two']
+        mock_config.return_value.get = mock.Mock(return_value='false')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_not_called()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    def test_should_not_render_blank_page_in_rear_page_mode(self, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_config.return_value.get = mock.Mock(return_value='true')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_not_called()
+
+
+class TestBlankPage(unittest.TestCase):
+
+    @mock.patch('ogre.pdf.canvas.Canvas')
+    def test_should_add_page(self, mock_canvas):
+        BlankPage(mock_canvas).render()
+        mock_canvas.add_page.assert_called_once()
 
 
 class TestFrontSide(unittest.TestCase):
@@ -78,6 +127,7 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_footer_on_front_side(self, mock_canvas):
+        mock_canvas.return_value.stringWidth.return_value = 0.0
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 555)
         mock_canvas.return_value.beginText.return_value.assert_has_calls([
             mock.call.textLine('Strona 555')
@@ -93,7 +143,7 @@ class TestFrontSide(unittest.TestCase):
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_table(self, mock_canvas):
 
-        mock_canvas.return_value.stringWidth.return_value = 999
+        mock_canvas.return_value.stringWidth.return_value = 120
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
@@ -130,6 +180,8 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_title(self, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = 120.0
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
@@ -187,7 +239,7 @@ class TestFrontSide(unittest.TestCase):
             bank2: reply2,
         })
 
-        mock_table.return_value.width = 10
+        mock_table.return_value.width = 175
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, replies, 0)
 
@@ -219,6 +271,31 @@ class TestFrontSide(unittest.TestCase):
         mock_config.return_value.get = mock.Mock(return_value='tRUe')
         front_side = FrontSide(mock.Mock(), mock.Mock())
         self.assertTrue(front_side._should_show_time())
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_shorten_long_name_and_add_ellipsis(self, mock_canvas):
+
+        it = iter(xrange(900, 300, -7))
+
+        def stringWidth(text, *args):
+            if text.startswith('PESEL'):
+                return 134
+            elif text.startswith('Ognivo'):
+                return next(it)
+            return 0
+
+        mock_canvas.return_value.stringWidth.side_effect = stringWidth
+
+        mock_debtor = mock.Mock()
+        mock_debtor.name = 'lorem ipsum dolor sit amet ' * 5
+        mock_debtor.identity.name = 'PESEL'
+        mock_debtor.identity.value = '12345678901'
+
+        FrontSide(Canvas(), mock.Mock()).render(mock_debtor, Chunk(1, 1, {}), 0)
+
+        mock_canvas.return_value.assert_has_calls([
+            mock.call.beginText().textLine(u'lorem ipsum dolor sit amet lorem ipsum dolor sit amet lore\u2026')
+        ], any_order=True)
 
 
 class TestRearSide(unittest.TestCase):
