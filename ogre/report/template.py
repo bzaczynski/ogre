@@ -173,15 +173,28 @@ class FrontSide(PageSide):
         self._canvas.font.weight = FontWeight.BOLD
         self._canvas.font.size_mm = 4.5
 
-        y = table.y - 5.5
+        id_ = u'{} # {}'.format(debtor.identity.name, debtor.identity.value)
+        available_space = table.width - self._canvas.get_text_width_mm(id_)
 
+        def get_width(title):
+            return self._canvas.get_text_width_mm('Ognivo: ' + title + u'\u2026')
+
+        title = prefix + debtor.name
+        while get_width(title) > available_space:
+            title = title[:-1]
+
+        title = title.strip()
+
+        if title != (prefix + debtor.name):
+            title += u'\u2026'
+
+        y = table.y - 5.5
         x = self._canvas.text('Ognivo: ', table.x, y)
         self._canvas.font.weight = FontWeight.NORMAL
-        self._canvas.text(prefix + debtor.name, x, y)
+        self._canvas.text(title, x, y)
 
         self._canvas.font.weight = FontWeight.NORMAL
-        text = u'{} # {}'.format(debtor.identity.name, debtor.identity.value)
-        self._canvas.text(text, table.x, y, table.width, halign=HAlign.RIGHT)
+        self._canvas.text(id_, table.x, y, table.width, halign=HAlign.RIGHT)
 
         self._canvas.pop_state()
 

@@ -127,6 +127,7 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_footer_on_front_side(self, mock_canvas):
+        mock_canvas.return_value.stringWidth.return_value = 0.0
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 555)
         mock_canvas.return_value.beginText.return_value.assert_has_calls([
             mock.call.textLine('Strona 555')
@@ -142,7 +143,7 @@ class TestFrontSide(unittest.TestCase):
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_table(self, mock_canvas):
 
-        mock_canvas.return_value.stringWidth.return_value = 999
+        mock_canvas.return_value.stringWidth.return_value = 120
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
@@ -179,6 +180,8 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_title(self, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = 120.0
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, Chunk(1, 1, {}), 0)
 
@@ -236,7 +239,7 @@ class TestFrontSide(unittest.TestCase):
             bank2: reply2,
         })
 
-        mock_table.return_value.width = 10
+        mock_table.return_value.width = 175
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, replies, 0)
 

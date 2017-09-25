@@ -217,6 +217,10 @@ class Canvas(object):
 
         return denormalize(cursor_x)
 
+    def get_text_width_mm(self, text):
+        """Return the width of text in mm determined by the font."""
+        return denormalize(self._get_text_width_pts(text))
+
     def _wrap(self, text, width):
         """Return a list of text lines wrapped so that they fit given width.
 

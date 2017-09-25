@@ -609,6 +609,21 @@ class TestCanvas(unittest.TestCase):
             mock.call('est'),
             mock.call('laborum.')])
 
+    def test_should_return_text_width(self):
+
+        canvas = Canvas()
+        canvas.font.family = FontFamily.SERIF
+        canvas.font.weight = FontWeight.NORMAL
+        canvas.font.style = FontStyle.ITALIC
+        canvas.font.size_pts = 10
+        canvas.font.char_space_pts = 1.5
+        canvas.font.word_space_pts = 2.5
+        canvas.font.leading = 1.5
+
+        width = canvas.get_text_width_mm('Lorem ipsum dolor sit amet.')
+
+        self.assertAlmostEqual(55.44, width, 2)
+
 
 def set_attribute(obj, path, value):
     """Recursively traverse object attributes and set values of the leafs."""
