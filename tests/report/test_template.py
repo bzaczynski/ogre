@@ -10,7 +10,7 @@ import ogre.config
 from ogre.pdf.canvas import Canvas
 from ogre.pdf import HAlign, VAlign
 from ogre.config import Config
-from ogre.report.template import Template, FrontSide, RearSide, Watermark, chunked
+from ogre.report.template import Template, BlankPage, FrontSide, RearSide, Watermark, chunked
 
 
 Chunk = collections.namedtuple('Chunk', 'num count data')
@@ -43,6 +43,55 @@ class TestTemplate(unittest.TestCase):
 
         mock_front.return_value.render.assert_called_once_with(mock.ANY, mock.ANY, 1)
         mock_rear.return_value.render.assert_called_once()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    def test_should_render_blank_page_when_odd_number_of_chunks(self, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_config.return_value.get = mock.Mock(return_value='false')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_called_once()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    @mock.patch('ogre.report.template.chunked')
+    def test_should_not_render_blank_page_when_even_number_of_chunks(self, mock_chunked, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_chunked.return_value = ['one', 'two']
+        mock_config.return_value.get = mock.Mock(return_value='false')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_not_called()
+
+    @mock.patch('ogre.report.template.config')
+    @mock.patch('ogre.report.template.BlankPage')
+    @mock.patch('ogre.report.template.RearSide')
+    @mock.patch('ogre.report.template.FrontSide')
+    def test_should_not_render_blank_page_in_rear_page_mode(self, mock_front, mock_rear, mock_blank_page, mock_config):
+
+        mock_config.return_value.get = mock.Mock(return_value='true')
+        template = Template(Canvas())
+
+        template.render(mock.Mock(), {mock.Mock(): mock.Mock()})
+
+        mock_blank_page.return_value.render.assert_not_called()
+
+
+class TestBlankPage(unittest.TestCase):
+
+    @mock.patch('ogre.pdf.canvas.Canvas')
+    def test_should_add_page(self, mock_canvas):
+        BlankPage(mock_canvas).render()
+        mock_canvas.add_page.assert_called_once()
 
 
 class TestFrontSide(unittest.TestCase):

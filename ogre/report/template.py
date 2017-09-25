@@ -53,10 +53,15 @@ class Template(object):
         front_side = FrontSide(self._canvas, self._watermark)
         rear_side = RearSide(self._canvas, self._watermark)
 
-        for chunk in chunked(replies, front_side.num_rows):
+        chunks = list(chunked(replies, front_side.num_rows))
+        for chunk in chunks:
             front_side.render(debtor, chunk, next(self._page_number))
             if self._should_show_rear():
                 rear_side.render(next(self._page_number))
+
+        if not self._should_show_rear():
+            if len(chunks) & 1:
+                BlankPage(self._canvas).render()
 
     def _should_show_rear(self):
         """Return True if the rear page should be rendered."""
@@ -64,6 +69,17 @@ class Template(object):
         if show_rear:
             return show_rear.lower() == 'true'
         return False
+
+
+class BlankPage(object):
+    """Empty side of a sheet of paper."""
+
+    def __init__(self, canvas):
+        self._canvas = canvas
+
+    def render(self):
+        """Render blank page on the current side of a sheet of paper."""
+        self._canvas.add_page()
 
 
 class PageSide(object):
