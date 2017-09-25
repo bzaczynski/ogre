@@ -272,6 +272,31 @@ class TestFrontSide(unittest.TestCase):
         front_side = FrontSide(mock.Mock(), mock.Mock())
         self.assertTrue(front_side._should_show_time())
 
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_shorten_long_name_and_add_ellipsis(self, mock_canvas):
+
+        it = iter(xrange(900, 300, -7))
+
+        def stringWidth(text, *args):
+            if text.startswith('PESEL'):
+                return 134
+            elif text.startswith('Ognivo'):
+                return next(it)
+            return 0
+
+        mock_canvas.return_value.stringWidth.side_effect = stringWidth
+
+        mock_debtor = mock.Mock()
+        mock_debtor.name = 'lorem ipsum dolor sit amet ' * 5
+        mock_debtor.identity.name = 'PESEL'
+        mock_debtor.identity.value = '12345678901'
+
+        FrontSide(Canvas(), mock.Mock()).render(mock_debtor, Chunk(1, 1, {}), 0)
+
+        mock_canvas.return_value.assert_has_calls([
+            mock.call.beginText().textLine(u'lorem ipsum dolor sit amet lorem ipsum dolor sit amet lore\u2026')
+        ], any_order=True)
+
 
 class TestRearSide(unittest.TestCase):
 
