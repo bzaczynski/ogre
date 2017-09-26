@@ -90,8 +90,19 @@ class TestBlankPage(unittest.TestCase):
 
     @mock.patch('ogre.pdf.canvas.Canvas')
     def test_should_add_page(self, mock_canvas):
-        BlankPage(mock_canvas).render()
+        BlankPage(mock_canvas, mock.Mock()).render(0)
         mock_canvas.add_page.assert_called_once()
+
+    @mock.patch('ogre.pdf.canvas.Canvas')
+    def test_should_render_watermark(self, mock_canvas):
+        mock_watermark = mock.Mock()
+        BlankPage(mock_canvas, mock_watermark).render(0)
+        mock_watermark.render.assert_called_once()
+
+    @mock.patch('ogre.pdf.canvas.Canvas')
+    def test_should_render_footer(self, mock_canvas):
+        BlankPage(mock_canvas, mock.Mock()).render(555)
+        mock_canvas.text.assert_called_once_with('Strona 555', 0, mock.ANY, mock.ANY, halign=HAlign.CENTER)
 
 
 class TestFrontSide(unittest.TestCase):
