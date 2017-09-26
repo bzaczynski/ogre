@@ -61,7 +61,8 @@ class Template(object):
 
         if not self._should_show_rear():
             if len(chunks) & 1:
-                BlankPage(self._canvas).render()
+                blank_page = BlankPage(self._canvas, self._watermark)
+                blank_page.render(next(self._page_number))
 
     def _should_show_rear(self):
         """Return True if the rear page should be rendered."""
@@ -71,19 +72,8 @@ class Template(object):
         return False
 
 
-class BlankPage(object):
-    """Empty side of a sheet of paper."""
-
-    def __init__(self, canvas):
-        self._canvas = canvas
-
-    def render(self):
-        """Render blank page on the current side of a sheet of paper."""
-        self._canvas.add_page()
-
-
 class PageSide(object):
-    """Abstract base class for front and rear sides of a page."""
+    """Abstract base class for a page."""
 
     __metaclass__ = abc.ABCMeta
 
@@ -91,15 +81,6 @@ class PageSide(object):
         super(PageSide, self).__init__()
         self._canvas = canvas
         self._watermark = watermark
-
-    @property
-    def num_rows(self):
-        """Return the number of rows in the table."""
-        return _Table(**self._params('123456')).num_rows
-
-    def _render_table(self, column_titles):
-        """Render and return table placeholder with the given column titles."""
-        return Table(**self._params(column_titles))
 
     def _render_footer(self, page_number):
         """Render footer at the bottom of the page."""
@@ -118,6 +99,37 @@ class PageSide(object):
 
         self._canvas.pop_state()
 
+
+class BlankPage(PageSide):
+    """Empty side of a sheet of paper."""
+
+    def __init__(self, canvas, watermark):
+        super(BlankPage, self).__init__(canvas, watermark)
+
+    def render(self, page_number):
+        """Render blank page on the current side of a sheet of paper."""
+        self._canvas.add_page()
+        self._watermark.render(self._canvas)
+        self._render_footer(page_number)
+
+
+class TabularPageSide(PageSide):
+    """Abstract base class for front and rear sides of a page."""
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, canvas, watermark):
+        super(TabularPageSide, self).__init__(canvas, watermark)
+
+    @property
+    def num_rows(self):
+        """Return the number of rows in the table."""
+        return _Table(**self._params('123456')).num_rows
+
+    def _render_table(self, column_titles):
+        """Render and return table placeholder with the given column titles."""
+        return Table(**self._params(column_titles))
+
     def _params(self, column_titles):
         """Return a dict with table's constructor parameters."""
         column_widths = (40, 25, 30, 25, 30, 25)
@@ -134,7 +146,7 @@ class PageSide(object):
         )
 
 
-class FrontSide(PageSide):
+class FrontSide(TabularPageSide):
     """Front side of a single sheet of paper."""
 
     def __init__(self, canvas, watermark):
@@ -243,7 +255,7 @@ class FrontSide(PageSide):
         return False
 
 
-class RearSide(PageSide):
+class RearSide(TabularPageSide):
     """Rear side of a single sheet of paper."""
 
     def __init__(self, canvas, watermark):
