@@ -34,7 +34,7 @@ from ogre.report.template import Template
 logger = logging.getLogger(__name__)
 
 
-class Report(object):
+class Report:
     """PDF document with bank replies grouped by debtor."""
 
     def __init__(self, model):
@@ -49,10 +49,10 @@ class Report(object):
         """Return true upon successful save to a given file path."""
         if self._rendered and self._document.canvas.num_pages > 0:
             self._document.save(path)
-            logger.info(u'Saved file as %s', os.path.abspath(path))
+            logger.info('Saved file as %s', os.path.abspath(path))
             return True
         else:
-            logger.error(u'There are no pages to be rendered')
+            logger.error('There are no pages to be rendered')
             return False
 
     def _set_metadata(self, model):
@@ -69,11 +69,11 @@ class Report(object):
     def _render(self, model):
         """Interpolate template with the data model."""
         if len(model.replies) > 0:
-            logger.info(u'Please wait while generating report...')
+            logger.info('Please wait while generating report...')
             template = Template(self._document.canvas)
             for i, debtor in enumerate(model.sorted_debtors):
-                logger.debug(u'Rendering template %d. %s',
-                             i + 1, unicode(debtor))
+                logger.debug('Rendering template %d. %s',
+                             i + 1, str(debtor))
                 template.render(debtor, model.replies[debtor])
             self._rendered = True
         else:

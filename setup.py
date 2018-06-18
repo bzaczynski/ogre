@@ -42,12 +42,12 @@ Testing:
 $ python setup.py test
 """
 
-import os.path
+import os
 
 from setuptools import setup, find_packages
 
 
-class Git(object):
+class Git:
     """Interface to git repositories."""
 
     def __init__(self, host, vendor):
@@ -56,11 +56,11 @@ class Git(object):
 
     def home_url(self, repo):
         """Return https url for project overview page."""
-        return 'https://{0}/{1}/{2}'.format(self.host, self.vendor, repo)
+        return f'https://{self.host}/{self.vendor}/{repo}'
 
     def clone_url(self, repo):
         """Return ssh url for git clone command."""
-        return 'git@{0}:{1}/{2}.git'.format(self.host, self.vendor, repo)
+        return f'git@{self.host}:{self.vendor}/{repo}.git'
 
     def pip_url(self, repo, package, version):
         """Return setuptools dependency link for pip install command."""
@@ -83,7 +83,7 @@ def find_version():
     """Return the value of ogre.__version__."""
 
     with open(path('ogre', '__init__.py')) as fp:
-        exec fp
+        exec(fp.read())
 
     return locals().get('__version__')
 
@@ -92,14 +92,14 @@ def main():
 
     git = Git('github.com', 'bzaczynski')
 
-    setup(name=u'ogre',
+    setup(name='ogre',
           version=find_version(),
-          description=u'Ognivo Report',
+          description='Ognivo Report',
           long_description=open(path('README.md')).read(),
-          author=u'Bartosz Zaczynski',
-          author_email=u'bartosz.zaczynski@gmail.com',
-          url=git.home_url(u'ogre'),
-          download_url=git.clone_url(u'ogre'),
+          author='Bartosz Zaczynski',
+          author_email='bartosz.zaczynski@gmail.com',
+          url=git.home_url('ogre'),
+          download_url=git.clone_url('ogre'),
           license='The MIT License',
           dependency_links=[],
           install_requires=open(path('requirements.txt')).read().splitlines(),

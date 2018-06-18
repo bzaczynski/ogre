@@ -1,8 +1,8 @@
 import unittest
-import mock
+from unittest import mock
 
 import datetime
-import StringIO
+import io
 
 from dateutil.tz import tzoffset
 
@@ -15,7 +15,7 @@ class TestBankReplyParser(unittest.TestCase):
     @mock.patch('codecs.open')
     def test_should_return_empty_values_of_missing_elements(self, mock_open):
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<root/>')
+        mock_open.return_value.__enter__.return_value = io.BytesIO(b'<root/>')
 
         parser = BankReplyParser('/path/to/file.xml')
 
@@ -26,7 +26,7 @@ class TestBankReplyParser(unittest.TestCase):
     @mock.patch('codecs.open')
     def test_should_not_require_xml_signature(self, mock_open):
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('''\
+        mock_open.return_value.__enter__.return_value = io.BytesIO(b'''\
 <ePismo dataPisma="2016-12-31">
     <NadawcaPisma>
         <KodBanku>12345678</KodBanku>
@@ -42,7 +42,7 @@ class TestBankReplyParser(unittest.TestCase):
     @mock.patch('codecs.open')
     def test_should_parse_single_entity(self, mock_open):
 
-        xml = u'''\
+        xml = '''\
 <ePismo>
     <TrescPisma>
         <Dluznicy>
@@ -60,7 +60,7 @@ class TestBankReplyParser(unittest.TestCase):
     </TrescPisma>
 </ePismo>'''
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.StringIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
@@ -69,12 +69,12 @@ class TestBankReplyParser(unittest.TestCase):
 
         entity = entities.pop()
         self.assertIsInstance(entity, NaturalPerson)
-        self.assertEqual(NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True), entity)
+        self.assertEqual(NaturalPerson(first_name='Jan', last_name='Kowalski', id=Id(name='PESEL', value='12345678900'), has_account=True), entity)
 
     @mock.patch('codecs.open')
     def test_should_parse_multiple_entities(self, mock_open):
 
-        xml = u'''\
+        xml = '''\
 <ePismo>
     <TrescPisma>
         <Dluznicy>
@@ -102,7 +102,7 @@ class TestBankReplyParser(unittest.TestCase):
     </TrescPisma>
 </ePismo>'''
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.StringIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
@@ -110,14 +110,14 @@ class TestBankReplyParser(unittest.TestCase):
         self.assertEqual(2, len(entities))
 
         self.assertListEqual([
-            NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True),
-            NaturalPerson(first_name=u'Anna', last_name=u'Nowak', id=Id(name=u'PESEL', value=u'00987654321'), has_account=False)
+            NaturalPerson(first_name='Jan', last_name='Kowalski', id=Id(name='PESEL', value='12345678900'), has_account=True),
+            NaturalPerson(first_name='Anna', last_name='Nowak', id=Id(name='PESEL', value='00987654321'), has_account=False)
         ], entities)
 
     @mock.patch('codecs.open')
     def test_should_parse_natural_person_and_legal_entity_differently(self, mock_open):
 
-        xml = u'''\
+        xml = '''\
 <ePismo>
     <TrescPisma>
         <Dluznicy>
@@ -154,7 +154,7 @@ class TestBankReplyParser(unittest.TestCase):
     </TrescPisma>
 </ePismo>'''
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.StringIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
@@ -162,15 +162,15 @@ class TestBankReplyParser(unittest.TestCase):
         self.assertEqual(3, len(entities))
 
         self.assertListEqual([
-            NaturalPerson(first_name=u'Jan', last_name=u'Kowalski', id=Id(name=u'PESEL', value=u'12345678900'), has_account=True),
-            LegalEntity(name=u'Firma Sp. z O.O.', id=Id(name=u'NIP', value=u'1234567890'), has_account=False),
-            NaturalPerson(first_name=u'Anna', last_name=u'Nowak', id=Id(name=u'PESEL', value=u'00987654321'), has_account=False)
+            NaturalPerson(first_name='Jan', last_name='Kowalski', id=Id(name='PESEL', value='12345678900'), has_account=True),
+            LegalEntity(name='Firma Sp. z O.O.', id=Id(name='NIP', value='1234567890'), has_account=False),
+            NaturalPerson(first_name='Anna', last_name='Nowak', id=Id(name='PESEL', value='00987654321'), has_account=False)
         ], entities)
 
     @mock.patch('codecs.open')
     def test_should_convert_identity_name_to_uppercase(self, mock_open):
 
-        xml = u'''\
+        xml = '''\
 <ePismo>
     <TrescPisma>
         <Dluznicy>
@@ -188,7 +188,7 @@ class TestBankReplyParser(unittest.TestCase):
     </TrescPisma>
 </ePismo>'''
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.StringIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
@@ -197,14 +197,13 @@ class TestBankReplyParser(unittest.TestCase):
     @mock.patch('codecs.open')
     def test_should_decode_unicode_values(self, mock_open):
 
-        xml = u'''\
-<ePismo>
+        xml = '''<ePismo>
     <TrescPisma>
         <Dluznicy>
             <Dluznik>
                 <OsobaFizyczna>
-                    <Imie>ZA\u017b\xd3\u0141\u0106</Imie>
-                    <Nazwisko>G\u0118\u015aL\u0104 JA\u0179\u0143</Nazwisko>
+                    <Imie>ZAŻÓŁĆ</Imie>
+                    <Nazwisko>GĘŚLĄ JAŹŃ</Nazwisko>
                     <Oznaczenie>
                         <regon>123456789</regon>
                     </Oznaczenie>
@@ -213,7 +212,7 @@ class TestBankReplyParser(unittest.TestCase):
             </Dluznik>
             <Dluznik>
                 <OsobaPrawna>
-                    <NazwaInstytucji>ZA\u017b\xd3\u0141\u0106 G\u0118\u015aL\u0104-JA\u0179\u0143</NazwaInstytucji>
+                    <NazwaInstytucji>ZAŻÓŁĆ GĘŚLĄ-JAŹŃ</NazwaInstytucji>
                     <Oznaczenie>
                         <NIP>1234567890</NIP>
                     </Oznaczenie>
@@ -222,22 +221,22 @@ class TestBankReplyParser(unittest.TestCase):
             </Dluznik>
         </Dluznicy>
     </TrescPisma>
-</ePismo>'''
+</ePismo>'''.encode('utf-8')
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.BytesIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
         entity1, entity2 = list(parser.entities)
 
-        self.assertEqual(u'Za\u017c\xf3\u0142\u0107', entity1.first_name)
-        self.assertEqual(u'G\u0119\u015bl\u0105 Ja\u017a\u0144', entity1.last_name)
-        self.assertEqual(u'ZA\u017b\xd3\u0141\u0106 G\u0118\u015aL\u0104-JA\u0179\u0143', entity2.name)
+        self.assertEqual('Za\u017c\xf3\u0142\u0107', entity1.first_name)
+        self.assertEqual('G\u0119\u015bl\u0105 Ja\u017a\u0144', entity1.last_name)
+        self.assertEqual('ZA\u017b\xd3\u0141\u0106 G\u0118\u015aL\u0104-JA\u0179\u0143', entity2.name)
 
     @mock.patch('codecs.open')
     def test_should_capitalize_hyphenated_names(self, mock_open):
 
-        xml = u'''\
+        xml = '''\
 <ePismo>
     <TrescPisma>
         <Dluznicy>
@@ -255,43 +254,43 @@ class TestBankReplyParser(unittest.TestCase):
     </TrescPisma>
 </ePismo>'''
 
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(xml)
+        mock_open.return_value.__enter__.return_value = io.StringIO(xml)
 
         parser = BankReplyParser('/path/to/file.xml')
 
         self.assertEqual(
-            u'G\u0119\u015bl\u0105-Ja\u017a\u0144',
+            'G\u0119\u015bl\u0105-Ja\u017a\u0144',
             list(parser.entities).pop().last_name)
 
     @mock.patch('codecs.open')
     def test_should_return_none_if_date_is_missing(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo />')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<ePismo />')
         parser = BankReplyParser('/path/to/file.xml')
         self.assertIsNone(parser.date)
 
     @mock.patch('codecs.open')
     def test_should_return_original_string_if_date_cannot_be_parsed(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="lorem"/>')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<ePismo dataPisma="lorem"/>')
         parser = BankReplyParser('/path/to/file.xml')
         self.assertEqual('lorem', parser.date)
 
     @mock.patch('codecs.open')
     def test_should_return_naive_date(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-04"/>')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<ePismo dataPisma="2016-08-04"/>')
         parser = BankReplyParser('/path/to/file.xml')
         self.assertIsInstance(parser.date, datetime.datetime)
         self.assertEqual(datetime.datetime(2016, 8, 4, 0, 0), parser.date)
 
     @mock.patch('codecs.open')
     def test_should_return_naive_date_and_time(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-01T12:01:05.306000"/>')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<ePismo dataPisma="2016-08-01T12:01:05.306000"/>')
         parser = BankReplyParser('/path/to/file.xml')
         self.assertIsInstance(parser.date, datetime.datetime)
         self.assertEqual(datetime.datetime(2016, 8, 1, 12, 1, 5, 306000), parser.date)
 
     @mock.patch('codecs.open')
     def test_should_return_date_and_time_with_timezone(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<ePismo dataPisma="2016-08-01T12:30:30.8929287+02:00"/>')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<ePismo dataPisma="2016-08-01T12:30:30.8929287+02:00"/>')
         parser = BankReplyParser('/path/to/file.xml')
         self.assertIsInstance(parser.date, datetime.datetime)
         self.assertEqual(datetime.datetime(2016, 8, 1, 12, 30, 30, 892928, tzinfo=tzoffset(None, 7200)), parser.date)
@@ -301,20 +300,20 @@ class TestXmlDocument(unittest.TestCase):
 
     @mock.patch('codecs.open')
     def test_should_decode_unicode_with_utf8(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO('<root/>')
+        mock_open.return_value.__enter__.return_value = io.StringIO('<root/>')
         XmlDocument('/path/to/file.xml')
         mock_open.assert_called_with('/path/to/file.xml', encoding='utf-8')
 
     @mock.patch('codecs.open')
     def test_should_get_child_recursively(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(
+        mock_open.return_value.__enter__.return_value = io.StringIO(
             '<root><child><child>value</child></child></root>')
         document = XmlDocument('/path/to/file.xml')
         self.assertEqual('value', document.get('/root/child/child'))
 
     @mock.patch('codecs.open')
     def test_should_get_list_recursively(self, mock_open):
-        mock_open.return_value.__enter__.return_value = StringIO.StringIO(
+        mock_open.return_value.__enter__.return_value = io.StringIO(
             '<root><child><child>value</child></child></root>')
         document = XmlDocument('/path/to/file.xml')
         self.assertListEqual(['value'], document.get_list('/root/child/child'))

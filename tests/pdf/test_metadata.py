@@ -1,7 +1,6 @@
 import unittest
 
 from ogre.pdf.metadata import Metadata
-from ogre.pdf.metadata import string
 
 
 class TestMetadata(unittest.TestCase):
@@ -48,24 +47,8 @@ class TestMetadata(unittest.TestCase):
     def test_should_encode_unicode_with_utf8(self):
 
         metadata = Metadata()
-        metadata.author = u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105'
-        metadata.title = u'ja\u017a\u0144'
+        metadata.author = 'zażółć gęślą'
+        metadata.title = 'jaźń'
 
-        self.assertEqual('Metadata(author="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", title="ja\xc5\xba\xc5\x84")', str(metadata))
-        self.assertEqual('Metadata(author="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", title="ja\xc5\xba\xc5\x84")', repr(metadata))
-        self.assertEqual(u'Metadata(author="za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105", title="ja\u017a\u0144")', unicode(metadata))
-
-
-class TestString(unittest.TestCase):
-
-    def test_should_retain_non_string(self):
-        self.assertEqual(123, string(123))
-
-    def test_should_retain_string(self):
-        self.assertEqual('lorem ipsum', string('lorem ipsum'))
-
-    def test_should_encode_unicode_with_utf8_by_default(self):
-        self.assertEqual('za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87', string(u'za\u017c\xf3\u0142\u0107'))
-
-    def test_should_encode_unicode_with_provided_encoding(self):
-        self.assertEqual('\xff\xfez\x00a\x00|\x01\xf3\x00B\x01\x07\x01', string(u'za\u017c\xf3\u0142\u0107', 'utf-16'))
+        self.assertEqual('Metadata(author="zażółć gęślą", title="jaźń")', str(metadata))
+        self.assertEqual('Metadata(author="zażółć gęślą", title="jaźń")', repr(metadata))

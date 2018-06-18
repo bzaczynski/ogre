@@ -48,11 +48,11 @@ def main(args):
         init_config(args.config)
         init_logging(args.debug)
 
-        logger.debug(unicode(config()))
+        logger.debug(str(config()))
 
         if os.path.exists(args.output) and not args.force_overwrite:
             logger.error(
-                u'File already exists. Use the -f flag to force overwrite.')
+                'File already exists. Use the -f flag to force overwrite.')
         else:
             model = Model(get_file_paths())
             report = Report(model)
@@ -61,7 +61,7 @@ def main(args):
                 webbrowser.open(args.output)
 
     except KeyboardInterrupt:
-        logger.info(u'Aborted with ^C')
+        logger.info('Aborted with ^C')
 
 
 def parse_args():

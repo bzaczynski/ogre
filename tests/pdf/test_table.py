@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from ogre.pdf import VAlign, HAlign, FontFamily, FontWeight, FontStyle
 from ogre.pdf.canvas import Canvas
@@ -308,12 +308,12 @@ class TestTable(unittest.TestCase):
     def get_header(self, height=15):
 
         columns = [
-            Column(45, u'lorem'),
-            Column(25, u'ipsum dolor sit amet'),
-            Column(30, u'consectetur adipisicing elit'),
-            Column(25, u'incididunt ut labore'),
-            Column(30, u'et dolore magna aliqua ut'),
-            Column(25, u'enim ad minim veniam')
+            Column(45, 'lorem'),
+            Column(25, 'ipsum dolor sit amet'),
+            Column(30, 'consectetur adipisicing elit'),
+            Column(25, 'incididunt ut labore'),
+            Column(30, 'et dolore magna aliqua ut'),
+            Column(25, 'enim ad minim veniam')
         ]
 
         return Header(height, columns)

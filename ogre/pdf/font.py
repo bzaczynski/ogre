@@ -38,7 +38,7 @@ from ogre.pdf.units import normalize
 from ogre.pdf.units import denormalize
 
 
-class Font(object):
+class Font:
     """Global settings of the font."""
 
     ATTRIBUTES = (
@@ -62,7 +62,7 @@ class Font(object):
         if not Font.registered:
             register_fonts_with_unicode_glyphs()
             Font.registered = True
-        return super(Font, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self):
         self._family = FontFamily.SERIF
@@ -77,7 +77,7 @@ class Font(object):
 
     def __setattr__(self, key, value):
         if key in Font.ATTRIBUTES or key.startswith('_'):
-            super(Font, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             raise AttributeError("Font has no attribute '%s'" % key)
 
@@ -179,13 +179,13 @@ class Font(object):
     @rise_pts.setter
     def rise_pts(self, value):
         """Set the font rise given in points."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._rise = value
 
     @rise_mm.setter
     def rise_mm(self, value):
         """Set the font rise given in millimeters."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._rise = normalize(value)
 
     @property
@@ -201,13 +201,13 @@ class Font(object):
     @char_space_pts.setter
     def char_space_pts(self, value):
         """Set character spacing given in points."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._char_space = value
 
     @char_space_mm.setter
     def char_space_mm(self, value):
         """Set character spacing given in millimeters."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._char_space = normalize(value)
 
     @property
@@ -223,13 +223,13 @@ class Font(object):
     @word_space_pts.setter
     def word_space_pts(self, value):
         """Set word spacing given in points."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._word_space = value
 
     @word_space_mm.setter
     def word_space_mm(self, value):
         """Set word spacing given in millimeters."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._word_space = normalize(value)
 
     @property
@@ -250,7 +250,7 @@ class Font(object):
     @leading.setter
     def leading(self, value):
         """Set text line spacing multiplier."""
-        assert isinstance(value, (int, long, float))
+        assert isinstance(value, (int, float))
         self._leading = value
 
     @property

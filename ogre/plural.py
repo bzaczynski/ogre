@@ -34,7 +34,7 @@ class PluralFormatter(string.Formatter):
     def get_value(self, key, args, kwargs):
         """Return interpolated string with optional custom formats."""
 
-        if isinstance(key, (int, long)):
+        if isinstance(key, int):
             return args[key]
 
         if key in kwargs:

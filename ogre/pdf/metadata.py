@@ -24,7 +24,8 @@
 Reportlab's PDF document metadata.
 """
 
-class Metadata(object):
+
+class Metadata:
     """PDF document meta data."""
 
     ATTRIBUTES = ('author', 'creator', 'keywords', 'subject', 'title')
@@ -35,7 +36,7 @@ class Metadata(object):
 
     def __setattr__(self, key, value):
         if key in Metadata.ATTRIBUTES:
-            super(Metadata, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             raise AttributeError("Metadata has no attribute '%s'" % key)
 
@@ -43,21 +44,10 @@ class Metadata(object):
         return repr(self)
 
     def __repr__(self):
-        return string(unicode(self))
-
-    def __unicode__(self):
 
         values = []
-        for name, value in sorted(self.__dict__.iteritems()):
+        for name, value in sorted(self.__dict__.items()):
             if value is not None:
-                values.append(u'%s="%s"' % (name, value))
+                values.append('%s="%s"' % (name, value))
 
-        return u'Metadata(%s)' % u', '.join(values)
-
-
-def string(text, encoding='utf-8'):
-    """Return a str object encoded with UTF-8 by default."""
-    if isinstance(text, basestring):
-        if isinstance(text, unicode):
-            return text.encode(encoding)
-    return text
+        return 'Metadata(%s)' % ', '.join(values)

@@ -35,7 +35,7 @@ from ogre.pdf import VAlign, HAlign
 Margins = collections.namedtuple('Margins', 'left top right bottom')
 
 
-class TableAlign(object):
+class TableAlign:
     """Alignment in both directions as well as margins relative to the page."""
 
     def __init__(self,
@@ -62,21 +62,21 @@ class TableAlign(object):
         self.margins = Margins(left, top, right, bottom)
 
 
-class Column(object):
+class Column:
     """Table column with a corresponding title text and optional x."""
 
     def __init__(self, width, title, x=None):
 
         assert width > 0.0, 'width must be a positive float number'
-        assert isinstance(title, basestring), 'title must be string'
-        assert x is None or isinstance(x, (int, long, float))
+        assert isinstance(title, str), 'title must be string'
+        assert x is None or isinstance(x, (int, float))
 
         self.width = width
         self.title = title
         self.x = x
 
 
-class Header(object):
+class Header:
     """Collection of entitled columns."""
 
     def __init__(self, height, columns):
@@ -93,7 +93,7 @@ class Header(object):
         return sum(column.width for column in self.columns[:last])
 
 
-class Table(object):
+class Table:
     """Rectangular table with fixed width and stretched out height."""
 
     def __init__(self, canvas, header, row_height, align=None):
@@ -171,7 +171,7 @@ class Table(object):
         self._canvas.pop_state()
 
 
-class _Table(object):
+class _Table:
     """Encapsulation of the table geometry details."""
 
     HEADER_FONT_SIZE_MM = 3

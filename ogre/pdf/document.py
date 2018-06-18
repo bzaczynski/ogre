@@ -28,7 +28,7 @@ from ogre.pdf.metadata import Metadata
 from ogre.pdf.canvas import Canvas
 
 
-class Document(object):
+class Document:
     """Abstraction of a PDF document."""
 
     def __init__(self):

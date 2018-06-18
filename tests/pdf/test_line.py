@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from ogre.pdf.line import Fill
 from ogre.pdf.line import Stroke

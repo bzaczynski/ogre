@@ -30,10 +30,10 @@ class TestPluralFormatter(unittest.TestCase):
         self.assertEqual('You have 2 messages.', self.formatter.format(template, count=2))
 
     def test_should_support_unicode(self):
-        template = u'Masz {count} {count(wiadomo\u015b\u0107,wiadomo\u015bci)}.'
-        self.assertEqual(u'Masz 0 wiadomo\u015bci.', self.formatter.format(template, count=0))
-        self.assertEqual(u'Masz 1 wiadomo\u015b\u0107.', self.formatter.format(template, count=1))
-        self.assertEqual(u'Masz 2 wiadomo\u015bci.', self.formatter.format(template, count=2))
+        template = 'Masz {count} {count(wiadomo\u015b\u0107,wiadomo\u015bci)}.'
+        self.assertEqual('Masz 0 wiadomo\u015bci.', self.formatter.format(template, count=0))
+        self.assertEqual('Masz 1 wiadomo\u015b\u0107.', self.formatter.format(template, count=1))
+        self.assertEqual('Masz 2 wiadomo\u015bci.', self.formatter.format(template, count=2))
 
     def test_should_support_regular_formats(self):
         template = 'Hello {0}, you have {count} {count(message,messages)}.'

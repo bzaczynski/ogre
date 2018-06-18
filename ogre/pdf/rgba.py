@@ -27,14 +27,12 @@ Base class for stroke and fill providing color and alpha channel.
 import abc
 
 
-class RgbaColor(object):
+class RgbaColor(metaclass=abc.ABCMeta):
     """Abstract RGB color with an alpha channel."""
-
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, viewport):
 
-        super(RgbaColor, self).__init__()
+        super().__init__()
 
         self._viewport = viewport
         self._color = '#000000'
@@ -59,7 +57,7 @@ class RgbaColor(object):
     @color.setter
     def color(self, value):
         """Set color (mnemonic such as "black" or a hexadecimal string)."""
-        assert isinstance(value, basestring), 'color must be string'
+        assert isinstance(value, str), 'color must be string'
         self._color = value
         self._apply(self._color, self._alpha)
 
@@ -71,6 +69,7 @@ class RgbaColor(object):
     @alpha.setter
     def alpha(self, value):
         """Set alpha channel (must be between 0.0 and 1.0 inclusive)."""
+        assert isinstance(value, (int, float))
         assert 0.0 <= value <= 1.0, 'alpha out of bounds'
         self._alpha = value
         self._apply(self._color, self._alpha)

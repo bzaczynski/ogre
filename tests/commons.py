@@ -1,7 +1,7 @@
-import StringIO
+import io
 
 
-class FakeFileObject(StringIO.StringIO):
+class FakeFileObject(io.BytesIO):
     """Amalgam of StringIO and the "with" statement."""
 
     def __enter__(self):

@@ -31,7 +31,7 @@ Features:
 - Separates concerns to avoid monolithic architecture.
 """
 
-import cStringIO
+import io
 import shutil
 import copy
 
@@ -49,11 +49,11 @@ from ogre.pdf.units import denormalize
 from ogre.pdf.align import VAlign, HAlign
 
 
-class Canvas(object):
+class Canvas:
     """Finite rectangular region used for rendering."""
 
     def __init__(self, size=A4):
-        self._buffer = cStringIO.StringIO()
+        self._buffer = io.StringIO()
         self._viewport = reportlab.pdfgen.canvas.Canvas(self._buffer, size)
         self._width, self._height = size
         self._state = State(self._viewport)
@@ -61,7 +61,7 @@ class Canvas(object):
 
     def __setattr__(self, key, value):
         if key.startswith('_'):
-            super(Canvas, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             raise AttributeError("Canvas has no attribute '%s'" % key)
 
@@ -155,9 +155,9 @@ class Canvas(object):
         assert len(coordinates) % 2 == 0
         assert len(coordinates) >= 4
 
-        points = zip(
+        points = list(zip(
             map(normalize, coordinates[::2]),
-            map(normalize, [self.height - y for y in coordinates[1::2]]))
+            map(normalize, [self.height - y for y in coordinates[1::2]])))
 
         path = self._viewport.beginPath()
         path.moveTo(*points[0])
@@ -170,8 +170,8 @@ class Canvas(object):
     def grid(self, x_columns, y_rows):
         """Draw a grid of vertical and horizontal lines to form a table."""
         self._viewport.grid(
-            map(normalize, x_columns),
-            map(normalize, [self.height - y for y in y_rows]))
+            list(map(normalize, x_columns)),
+            list(map(normalize, [self.height - y for y in y_rows])))
 
     def text(self, text, x, y,
              width=0, height=0,
@@ -262,7 +262,7 @@ class Canvas(object):
             return get_width(text)
 
 
-class State(object):
+class State:
     """Global state of the graphics viewport."""
 
     def __init__(self, viewport):

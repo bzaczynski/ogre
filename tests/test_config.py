@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 import collections
 
@@ -13,12 +13,12 @@ class TestConfig(unittest.TestCase):
 
     def setUp(self):
         self.cfg = Config(collections.defaultdict(dict, **{
-            u'section1': {
-                u'za\u017c\xf3\u0142\u0107': u'g\u0119\u015bl\u0105 ja\u017a\u0144'
+            'section1': {
+                'zażółć': 'gęślą jaźń'
             },
-            u'section2': {
-                u'key': u'\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144',
-                u'pchn\u0105\u0107': u'\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig'
+            'section2': {
+                'key': 'żółw na starość wydziela wstrętną woń',
+                'pchnąć': 'łódź jeża lub ośm skrzyń fig'
             }
         }))
 
@@ -26,32 +26,27 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(AssertionError):
             Config({})
 
-    def test_repr(self):
+    def test_str(self):
         self.assertEqual(
-            '--- section1 ---\nza\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 = g\xc4\x99\xc5\x9bl\xc4\x85 ja\xc5\xba\xc5\x84\n\n--- section2 ---\nkey = \xc5\xbc\xc3\xb3\xc5\x82w na staro\xc5\x9b\xc4\x87 wydziela wstr\xc4\x99tn\xc4\x85 wo\xc5\x84\npchn\xc4\x85\xc4\x87 = \xc5\x82\xc3\xb3d\xc5\xba je\xc5\xbca lub o\xc5\x9bm skrzy\xc5\x84 fig\n',
-            repr(self.cfg))
-
-    def test_unicode(self):
-        self.assertEqual(
-            u'--- section1 ---\nza\u017c\xf3\u0142\u0107 = g\u0119\u015bl\u0105 ja\u017a\u0144\n\n--- section2 ---\nkey = \u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144\npchn\u0105\u0107 = \u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig\n',
-            unicode(self.cfg))
+            '--- section1 ---\nzażółć = gęślą jaźń\n\n--- section2 ---\nkey = żółw na starość wydziela wstrętną woń\npchnąć = łódź jeża lub ośm skrzyń fig\n',
+            str(self.cfg))
 
     def test_should_return_all_sections_and_properties(self):
         self.assertIsInstance(self.cfg.get_all(), collections.defaultdict)
         self.assertDictEqual({
-            u'section1': {
-                u'za\u017c\xf3\u0142\u0107': u'g\u0119\u015bl\u0105 ja\u017a\u0144'
+            'section1': {
+                'zażółć': 'gęślą jaźń'
             },
-            u'section2': {
-                u'key': u'\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144',
-                u'pchn\u0105\u0107': u'\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig'
+            'section2': {
+                'key': 'żółw na starość wydziela wstrętną woń',
+                'pchnąć': 'łódź jeża lub ośm skrzyń fig'
             }
         }, self.cfg.get_all())
 
     def test_should_return_all_properties_from_section(self):
         self.assertDictEqual({
-            u'key': u'\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144',
-            u'pchn\u0105\u0107': u'\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig'
+            'key': 'żółw na starość wydziela wstrętną woń',
+            'pchnąć': 'łódź jeża lub ośm skrzyń fig'
         }, self.cfg.get_all('section2'))
 
     def test_should_return_empty_dict_on_missing_section(self):
@@ -59,7 +54,7 @@ class TestConfig(unittest.TestCase):
 
     def test_should_return_section_property(self):
         self.assertEqual(
-            u'\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144',
+            'żółw na starość wydziela wstrętną woń',
             self.cfg.get('section2', 'key'))
 
     def test_should_return_default_value_on_missing_property(self):
@@ -79,8 +74,8 @@ class TestConfig(unittest.TestCase):
         }))
 
         self.assertEqual(
-            u'Hello Pawe\u0142, your age is 12.',
-            cfg.get('section', 'key', name=u'Pawe\u0142', age=12))
+            'Hello Paweł, your age is 12.',
+            cfg.get('section', 'key', name='Paweł', age=12))
 
     def test_should_interpolate_plural_templates(self):
 
@@ -112,7 +107,7 @@ class TestConfig(unittest.TestCase):
     @mock.patch('ogre.config.open')
     def test_should_override_properties(self, mock_open):
 
-        mock_open.return_value = FakeFileObject('''\
+        mock_open.return_value = FakeFileObject(b'''\
 [section]
 key=overridden value
 new-key=new-value
@@ -161,7 +156,7 @@ class TestConfigLoader(unittest.TestCase):
     @mock.patch('ogre.config.open')
     def test_should_load_from_file(self, mock_open):
 
-        mock_open.return_value = FakeFileObject('''\
+        mock_open.return_value = FakeFileObject(b'''\
 [section1]
 key=value
 
@@ -180,7 +175,7 @@ key=value
     @mock.patch('ogre.config.resource_stream')
     def test_should_load_from_resource(self, mock_resource_stream):
 
-        mock_resource_stream.return_value = FakeFileObject('''\
+        mock_resource_stream.return_value = FakeFileObject(b'''\
 [section1]
 key=value
 
@@ -214,7 +209,7 @@ key=value
     @mock.patch('ogre.config.open')
     def test_should_not_interpolate_templates(self, mock_open):
 
-        mock_open.return_value = FakeFileObject('''\
+        mock_open.return_value = FakeFileObject(b'''\
 [section1]
 key1=Today is {date}
 key2=What is you {0} age?
@@ -239,12 +234,10 @@ key=Hello %(name)s
     @mock.patch('ogre.config.open')
     def test_should_decode_escaped_unicode_in_sections_keys_values(self, mock_open):
 
-        mock_open.return_value = FakeFileObject('''\
-[ja\u017a\u0144]
+        mock_open.return_value = FakeFileObject(rb'''[ja\u017a\u0144]
 za\u017c\xf3\u0142\u0107=g\u0119\u015bl\u0105
 
 [section2]
-key=value
 key=\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144
 pchn\u0105\u0107=\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig
 ''')
@@ -252,11 +245,11 @@ pchn\u0105\u0107=\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig
         cfg = Config(_load_from_file('/path/to/file'))
 
         self.assertDictEqual({
-            u'ja\u017a\u0144': {
-                u'za\u017c\xf3\u0142\u0107': u'g\u0119\u015bl\u0105'
+            'jaźń': {
+                'zażółć': 'gęślą'
             },
-            u'section2': {
-                u'key': u'\u017c\xf3\u0142w na staro\u015b\u0107 wydziela wstr\u0119tn\u0105 wo\u0144',
-                u'pchn\u0105\u0107': u'\u0142\xf3d\u017a je\u017ca lub o\u015bm skrzy\u0144 fig'
+            'section2': {
+                'key': 'żółw na starość wydziela wstrętną woń',
+                'pchnąć': 'łódź jeża lub ośm skrzyń fig'
             }
         }, cfg.get_all())

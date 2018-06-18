@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from align import HAlign, VAlign
-from document import Document
-from font import FontFamily, FontWeight, FontStyle, FontRenderMode
-from line import LineCap, LineJoin, LineDash
-from table import Column, Header, Table, TableAlign
+from .align import HAlign, VAlign
+from .document import Document
+from .font import FontFamily, FontWeight, FontStyle, FontRenderMode
+from .line import LineCap, LineJoin, LineDash
+from .table import Column, Header, Table, TableAlign
