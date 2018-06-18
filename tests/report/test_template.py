@@ -313,6 +313,23 @@ class TestFrontSide(unittest.TestCase):
             mock.call.beginText().textLine('lorem ipsum dolor sit amet lorem ipsum dolor sit amet lore\u2026')
         ], any_order=True)
 
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_call_chunk_asdict(self, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = -999.0
+
+        mock_chunk = mock.Mock()
+        mock_chunk.count = 2
+        mock_chunk.num = 1
+        mock_chunk.data = {}
+        mock_chunk._asdict.return_value = {'count': 2, 'num': 1, 'data': {}}
+
+        mock_debtor = mock.Mock()
+        mock_debtor.name = 'Jan Kowalski'
+
+        FrontSide(Canvas(), mock.Mock()).render(mock_debtor, mock_chunk, 0)
+        mock_chunk._asdict.assert_called()
+
 
 class TestRearSide(unittest.TestCase):
 

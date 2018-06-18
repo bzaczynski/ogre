@@ -165,7 +165,7 @@ class FrontSide(TabularPageSide):
 
         prefix = ''
         if chunk.count > 1:
-            prefix = '({num}/{count}) '.format(**vars(chunk))
+            prefix = '({num}/{count}) '.format(**chunk._asdict())
 
         self._render_title(debtor, table, prefix)
         self._render_replies(chunk.data, table)
