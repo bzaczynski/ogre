@@ -12,8 +12,8 @@ $ git clone https://github.com/bzaczynski/ogre.git
 
 Binary packages:
 
-* [Linux](hhttps://www.dropbox.com/s/8jiulcwrff9qiux/ogre-1.4.0-linux.pex?dl=1)
-* [Windows](TODO)
+* [Linux](https://www.dropbox.com/s/8jiulcwrff9qiux/ogre-1.4.0-linux.pex?dl=1)
+* [Windows](https://www.dropbox.com/s/md2cnd69czih1tg/ogre-1.4.0-windows.pex?dl=1)
 
 ### Requirements
 
@@ -72,10 +72,6 @@ Although not strictly required it is still advisable to use a dedicated virtual 
 ```
 $ pip install virtualenv virtualenvwraper
 ```
-
-##### C++ Compiler
-
-On Windows you will need to install [Microsoft Visual C++ Compiler for Python 2.7](http://aka.ms/vcpython27) since this program depends on native libraries which need to be built from source.
 
 #### System-wide Installation
 
