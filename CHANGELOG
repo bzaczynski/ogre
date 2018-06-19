@@ -36,11 +36,6 @@
 
     > collections.namedtuple no longer contains `__dict__` attribute.
 
-* TODO: update README
-* TODO: compile binaries for Windows and Linux
-* TODO: test thoroughly (e.g. compare against the old version)
-* TODO: update bank prefixes in config.ini
-
 ## 1.3.2
 
 * Show page number as well as watermark on a blank page.
