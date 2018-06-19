@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 import collections
 import itertools
 import datetime
@@ -16,14 +16,14 @@ from tests.commons import FakeFileObject
 class TestIdentity(unittest.TestCase):
 
     def setUp(self):
-        self.identity = Identity(u'za\u017c\xf3\u0142\u0107', u'g\u0119\u015bl\u0105')
+        self.identity = Identity('zażółć', 'gęślą')
 
     def test_should_make_identity_name_uppercase(self):
         self.assertEqual('PESEL', Identity('pEsEl', '123').name)
 
     def test_values(self):
-        self.assertEqual(u'ZA\u017b\xd3\u0141\u0106', self.identity.name)
-        self.assertEqual(u'g\u0119\u015bl\u0105', self.identity.value)
+        self.assertEqual('ZAŻÓŁĆ', self.identity.name)
+        self.assertEqual('gęślą', self.identity.value)
 
     def test_should_trim_leading_zeros_if_string(self):
         identity = Identity('name', 3.1415)
@@ -43,13 +43,10 @@ class TestIdentity(unittest.TestCase):
         self.assertEqual(id1, id2)
 
     def test_str(self):
-        self.assertEqual('Identity(name="ZA\xc5\xbb\xc3\x93\xc5\x81\xc4\x86", value="g\xc4\x99\xc5\x9bl\xc4\x85")', str(self.identity))
+        self.assertEqual('Identity(name="ZAŻÓŁĆ", value="gęślą")', str(self.identity))
 
     def test_repr(self):
-        self.assertEqual('Identity(name="ZA\xc5\xbb\xc3\x93\xc5\x81\xc4\x86", value="g\xc4\x99\xc5\x9bl\xc4\x85")', repr(self.identity))
-
-    def test_unicode(self):
-        self.assertEqual(u'Identity(name="ZA\u017b\xd3\u0141\u0106", value="g\u0119\u015bl\u0105")', unicode(self.identity))
+        self.assertEqual('Identity(name="ZAŻÓŁĆ", value="gęślą")', repr(self.identity))
 
 
 class TestReply(unittest.TestCase):
@@ -57,7 +54,7 @@ class TestReply(unittest.TestCase):
     @mock.patch('ogre.ognivo.model._get_name_and_prefix')
     def setUp(self, mock_get):
 
-        mock_get.return_value = u'za\u017c\xf3\u0142\u0107', '001'
+        mock_get.return_value = 'zażółć', '001'
 
         self.bank = Bank('00123')
         self.reply = Reply(self.bank, dateutil.parser.parse('1970-01-01'), True, '/path/to/file')
@@ -78,13 +75,10 @@ class TestReply(unittest.TestCase):
         self.assertEqual('/path/to/file', self.reply.file_path)
 
     def test_str(self):
-        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', str(self.reply))
+        self.assertEqual('Reply(bank="Bank(code="00123", name="zażółć")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', str(self.reply))
 
     def test_repr(self):
-        self.assertEqual('Reply(bank="Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', repr(self.reply))
-
-    def test_unicode(self):
-        self.assertEqual(u'Reply(bank="Bank(code="00123", name="za\u017c\xf3\u0142\u0107")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', unicode(self.reply))
+        self.assertEqual('Reply(bank="Bank(code="00123", name="zażółć")", date="1970-01-01T00:00:00", has_account=true, file_path="/path/to/file")', repr(self.reply))
 
     def test_date_string_str(self):
         reply = Reply(self.bank, '1970-01-01', False, '/path/to/file')
@@ -130,13 +124,13 @@ class TestDebtor(unittest.TestCase):
     def setUp(self):
 
         self.person = NaturalPerson(
-            u'za\u017c\xf3\u0142\u0107',
-            u'g\u0119\u015bl\u0105',
+            'zażółć',
+            'gęślą',
             Id('PESEL', '12345678901'),
             True)
 
         self.legal = LegalEntity(
-            u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144',
+            'zażółć gęślą jaźń',
             Id('NIP', '1234567890'),
             False)
 
@@ -144,21 +138,18 @@ class TestDebtor(unittest.TestCase):
         self.debtor2 = Debtor(self.legal)
 
     def test_str(self):
-        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", id=Identity(name="PESEL", value="12345678901"))', str(self.debtor1))
+        self.assertEqual('Debtor(name="zażółć gęślą", id=Identity(name="PESEL", value="12345678901"))', str(self.debtor1))
 
     def test_repr(self):
-        self.assertEqual('Debtor(name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87 g\xc4\x99\xc5\x9bl\xc4\x85", id=Identity(name="PESEL", value="12345678901"))', repr(self.debtor1))
-
-    def test_unicode(self):
-        self.assertEqual(u'Debtor(name="za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105", id=Identity(name="PESEL", value="12345678901"))', unicode(self.debtor1))
+        self.assertEqual('Debtor(name="zażółć gęślą", id=Identity(name="PESEL", value="12345678901"))', repr(self.debtor1))
 
     def test_should_is_person(self):
         self.assertTrue(self.debtor1.is_person)
         self.assertFalse(self.debtor2.is_person)
 
     def test_should_get_debtor_name(self):
-        self.assertEqual(u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105', self.debtor1.name)
-        self.assertEqual(u'za\u017c\xf3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144', self.debtor2.name)
+        self.assertEqual('zażółć gęślą', self.debtor1.name)
+        self.assertEqual('zażółć gęślą jaźń', self.debtor2.name)
 
     def test_should_get_debtor_identity(self):
 
@@ -183,19 +174,14 @@ class TestDebtor(unittest.TestCase):
 class TestBank(unittest.TestCase):
 
     def test_str(self, mock_get):
-        mock_get.return_value = u'za\u017c\xf3\u0142\u0107', '001'
+        mock_get.return_value = 'zażółć', '001'
         bank = Bank('00123')
-        self.assertEqual('Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")', str(bank))
+        self.assertEqual('Bank(code="00123", name="zażółć")', str(bank))
 
     def test_repr(self, mock_get):
-        mock_get.return_value = u'za\u017c\xf3\u0142\u0107', '001'
+        mock_get.return_value = 'zażółć', '001'
         bank = Bank('00123')
-        self.assertEqual('Bank(code="00123", name="za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87")', repr(bank))
-
-    def test_unicode(self, mock_get):
-        mock_get.return_value = u'za\u017c\xf3\u0142\u0107', '001'
-        bank = Bank('00123')
-        self.assertEqual(u'Bank(code="00123", name="za\u017c\xf3\u0142\u0107")', unicode(bank))
+        self.assertEqual('Bank(code="00123", name="zażółć")', repr(bank))
 
     def test_should_get_bank_attributes(self, mock_get):
 
@@ -225,9 +211,9 @@ class TestModelXmlError(unittest.TestCase):
 
     def setUp(self):
 
-        self.not_well_formed_xml_file = FakeFileObject('plain text')
+        self.not_well_formed_xml_file = FakeFileObject(b'plain text')
 
-        self.invalid_xml_file = FakeFileObject('''\
+        self.invalid_xml_file = FakeFileObject(b'''\
 <!DOCTYPE html>
 <html>
 <head>
@@ -238,7 +224,7 @@ Hello world
 </body>
 </html>''')
 
-        self.valid_xml_file = FakeFileObject('''\
+        self.valid_xml_file = FakeFileObject(b'''\
 <ePismo dataPisma="2016-12-31">
     <NadawcaPisma>
         <KodBanku>12345678</KodBanku>
@@ -511,7 +497,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
         self.assertEqual('Jan Kowalski', debtor.name)
         self.assertEqual('PESEL', debtor.identity.name)
         self.assertEqual('12345678900', debtor.identity.value)
@@ -520,7 +506,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor.keys()))
 
-        bank = banks_replies_for_debtor.keys().pop()
+        bank = list(banks_replies_for_debtor.keys()).pop()
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
 
@@ -542,7 +528,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
         self.assertEqual('12345678900', debtor.identity.value)
@@ -601,7 +587,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor1.keys()))
 
-        bank = banks_replies_for_debtor1.keys().pop()
+        bank = list(banks_replies_for_debtor1.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -617,7 +603,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor2.keys()))
 
-        bank = banks_replies_for_debtor2.keys().pop()
+        bank = list(banks_replies_for_debtor2.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -633,7 +619,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor3.keys()))
 
-        bank = banks_replies_for_debtor3.keys().pop()
+        bank = list(banks_replies_for_debtor3.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -678,7 +664,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor1.keys()))
 
-        bank = banks_replies_for_debtor1.keys().pop()
+        bank = list(banks_replies_for_debtor1.keys()).pop()
 
         self.assertEqual('30211', bank.code)
         self.assertEqual('Dolor Bank', bank.name)
@@ -694,7 +680,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor2.keys()))
 
-        bank = banks_replies_for_debtor2.keys().pop()
+        bank = list(banks_replies_for_debtor2.keys()).pop()
 
         self.assertEqual('30211', bank.code)
         self.assertEqual('Dolor Bank', bank.name)
@@ -710,7 +696,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor3.keys()))
 
-        bank = banks_replies_for_debtor3.keys().pop()
+        bank = list(banks_replies_for_debtor3.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -759,7 +745,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('Jan Kowalski', debtor.name)
         self.assertEqual('PESEL', debtor.identity.name)
@@ -802,7 +788,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
@@ -845,7 +831,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
@@ -886,7 +872,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('Jan Kowalski', debtor.name)
         self.assertEqual('PESEL', debtor.identity.name)
@@ -896,7 +882,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor.keys()))
 
-        bank = banks_replies_for_debtor.keys().pop()
+        bank = list(banks_replies_for_debtor.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -919,7 +905,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
@@ -927,7 +913,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(0, len(model.replies[debtor]))
 
-        mock_logger.warn.assert_called_once_with(
+        mock_logger.warning.assert_called_once_with(
             'Inconsistent replies from the same bank %s for %s',
             mock.ANY, debtor)
 
@@ -944,7 +930,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
@@ -952,7 +938,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(0, len(model.replies[debtor]))
 
-        mock_logger.warn.assert_called_once_with(
+        mock_logger.warning.assert_called_once_with(
             'Inconsistent replies from the same bank %s for %s',
             mock.ANY, debtor)
 
@@ -973,7 +959,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(model.replies.keys()))
 
-        debtor = model.replies.keys().pop()
+        debtor = list(model.replies.keys()).pop()
 
         self.assertEqual('jan kowalski', debtor.name.lower())
         self.assertEqual('PESEL', debtor.identity.name)
@@ -983,7 +969,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(1, len(banks_replies_for_debtor.keys()))
 
-        bank = banks_replies_for_debtor.keys().pop()
+        bank = list(banks_replies_for_debtor.keys()).pop()
 
         self.assertEqual('00123', bank.code)
         self.assertEqual('Lorem Bank', bank.name)
@@ -995,7 +981,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(reply.has_account)
         self.assertEqual('/path/to/file2', reply.file_path)
 
-        mock_logger.warn.assert_called_once_with(
+        mock_logger.warning.assert_called_once_with(
             'Inconsistent replies from the same bank %s for %s',
             mock.ANY, debtor)
 
@@ -1013,101 +999,101 @@ class TestModel(unittest.TestCase):
             return LegalEntity(name, identity(), False)
 
         self.mock_parser.entities = [
-            person(u'Karol', u'Walczak'),
-            person(u'Maja', u'Szulc'),
-            person(u'Franciszek', u'Ostrowski'),
-            person(u'Leon', u'Mucha'),
-            legal(u'Auchan'),
-            person(u'Wiktoria', u'Pawlak'),
-            person(u'Natalia', u'Kasprzak'),
-            person(u'Hanna', u'Majchrzak'),
-            person(u'Kacper', u'Krupa'),
-            person(u'Tymon', u'D\u0105browski'),
-            legal(u'Carrefour'),
-            person(u'Julian', u'Sowa'),
-            person(u'Miko\u0142aj', u'Ostrowski'),
-            person(u'Zuzanna', u'Kozio\u0142'),
-            person(u'Anna', u'Augustyniak'),
-            person(u'Weronika', u'Markowska'),
-            legal(u'Biedronka'),
-            person(u'Wiktoria', u'Rogowska'),
-            person(u'\u0141ukasz', u'\u0141uczak'),
-            person(u'Maksymilian', u'G\xf3rski'),
-            legal(u'Tesco'),
-            person(u'Alicja', u'Morawska'),
-            legal(u'\u017babka'),
-            person(u'Szymon', u'Kosi\u0144ski'),
-            person(u'Piotr', u'Tomczyk'),
-            person(u'Kacper', u'Olejnik'),
-            person(u'Szymon', u'W\xf3jcik'),
-            person(u'Mi\u0142osz', u'Zalewski'),
-            person(u'Karolina', u'Lewandowska'),
-            person(u'Urszula', u'Lewandowska'),
-            person(u'Tymoteusz', u'Kowalik'),
-            person(u'Sebastian', u'Krupa'),
-            person(u'Urszula', u'Ka\u017amierczak'),
-            person(u'Kacper', u'Bara\u0144ski'),
-            person(u'Szymon', u'Sobolewski'),
-            person(u'Filip', u'Nawrocki'),
-            legal(u'Lewiatan'),
-            person(u'Anna', u'Ko\u0142odziej'),
-            person(u'Jan', u'Kr\xf3l'),
-            person(u'Julia', u'Markiewicz'),
-            person(u'Lena', u'Karpi\u0144ska'),
-            person(u'Wiktoria', u'Marzec'),
-            person(u'Olaf', u'Matusiak'),
-            person(u'Dominika', u'Nowak'),
-            person(u'Stanis\u0142aw', u'Kurek')
+            person('Karol', 'Walczak'),
+            person('Maja', 'Szulc'),
+            person('Franciszek', 'Ostrowski'),
+            person('Leon', 'Mucha'),
+            legal('Auchan'),
+            person('Wiktoria', 'Pawlak'),
+            person('Natalia', 'Kasprzak'),
+            person('Hanna', 'Majchrzak'),
+            person('Kacper', 'Krupa'),
+            person('Tymon', 'Dąbrowski'),
+            legal('Carrefour'),
+            person('Julian', 'Sowa'),
+            person('Mikołaj', 'Ostrowski'),
+            person('Zuzanna', 'Kozioł'),
+            person('Anna', 'Augustyniak'),
+            person('Weronika', 'Markowska'),
+            legal('Biedronka'),
+            person('Wiktoria', 'Rogowska'),
+            person('Łukasz', 'Łuczak'),
+            person('Maksymilian', 'Górski'),
+            legal('Tesco'),
+            person('Alicja', 'Morawska'),
+            legal('Żabka'),
+            person('Szymon', 'Kosiński'),
+            person('Piotr', 'Tomczyk'),
+            person('Kacper', 'Olejnik'),
+            person('Szymon', 'Wójcik'),
+            person('Miłosz', 'Zalewski'),
+            person('Karolina', 'Lewandowska'),
+            person('Urszula', 'Lewandowska'),
+            person('Tymoteusz', 'Kowalik'),
+            person('Sebastian', 'Krupa'),
+            person('Urszula', 'Kaźmierczak'),
+            person('Kacper', 'Barański'),
+            person('Szymon', 'Sobolewski'),
+            person('Filip', 'Nawrocki'),
+            legal('Lewiatan'),
+            person('Anna', 'Kołodziej'),
+            person('Jan', 'Król'),
+            person('Julia', 'Markiewicz'),
+            person('Lena', 'Karpińska'),
+            person('Wiktoria', 'Marzec'),
+            person('Olaf', 'Matusiak'),
+            person('Dominika', 'Nowak'),
+            person('Stanisław', 'Kurek')
         ]
 
         model = Model(['/path/to/file'])
 
         self.assertListEqual([
-            u'Auchan',
-            u'Biedronka',
-            u'Carrefour',
-            u'Lewiatan',
-            u'Tesco',
-            u'\u017babka',
-            u'Anna Augustyniak',
-            u'Kacper Bara\u0144ski',
-            u'Tymon D\u0105browski',
-            u'Maksymilian G\xf3rski',
-            u'Lena Karpi\u0144ska',
-            u'Natalia Kasprzak',
-            u'Urszula Ka\u017amierczak',
-            u'Anna Ko\u0142odziej',
-            u'Szymon Kosi\u0144ski',
-            u'Tymoteusz Kowalik',
-            u'Zuzanna Kozio\u0142',
-            u'Jan Kr\xf3l',
-            u'Kacper Krupa',
-            u'Sebastian Krupa',
-            u'Stanis\u0142aw Kurek',
-            u'Karolina Lewandowska',
-            u'Urszula Lewandowska',
-            u'\u0141ukasz \u0141uczak',
-            u'Hanna Majchrzak',
-            u'Julia Markiewicz',
-            u'Weronika Markowska',
-            u'Wiktoria Marzec',
-            u'Olaf Matusiak',
-            u'Alicja Morawska',
-            u'Leon Mucha',
-            u'Filip Nawrocki',
-            u'Dominika Nowak',
-            u'Kacper Olejnik',
-            u'Franciszek Ostrowski',
-            u'Miko\u0142aj Ostrowski',
-            u'Wiktoria Pawlak',
-            u'Wiktoria Rogowska',
-            u'Szymon Sobolewski',
-            u'Julian Sowa',
-            u'Maja Szulc',
-            u'Piotr Tomczyk',
-            u'Karol Walczak',
-            u'Szymon W\xf3jcik',
-            u'Mi\u0142osz Zalewski'],
+            'Auchan',
+            'Biedronka',
+            'Carrefour',
+            'Lewiatan',
+            'Tesco',
+            'Żabka',
+            'Anna Augustyniak',
+            'Kacper Barański',
+            'Tymon Dąbrowski',
+            'Maksymilian Górski',
+            'Lena Karpińska',
+            'Natalia Kasprzak',
+            'Urszula Kaźmierczak',
+            'Anna Kołodziej',
+            'Szymon Kosiński',
+            'Tymoteusz Kowalik',
+            'Zuzanna Kozioł',
+            'Jan Król',
+            'Kacper Krupa',
+            'Sebastian Krupa',
+            'Stanisław Kurek',
+            'Karolina Lewandowska',
+            'Urszula Lewandowska',
+            'Łukasz Łuczak',
+            'Hanna Majchrzak',
+            'Julia Markiewicz',
+            'Weronika Markowska',
+            'Wiktoria Marzec',
+            'Olaf Matusiak',
+            'Alicja Morawska',
+            'Leon Mucha',
+            'Filip Nawrocki',
+            'Dominika Nowak',
+            'Kacper Olejnik',
+            'Franciszek Ostrowski',
+            'Mikołaj Ostrowski',
+            'Wiktoria Pawlak',
+            'Wiktoria Rogowska',
+            'Szymon Sobolewski',
+            'Julian Sowa',
+            'Maja Szulc',
+            'Piotr Tomczyk',
+            'Karol Walczak',
+            'Szymon Wójcik',
+            'Miłosz Zalewski'],
             [x.name for x in model.sorted_debtors])
 
     def test_collation_should_accept_str(self):

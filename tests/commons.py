@@ -1,8 +1,8 @@
-import StringIO
+import io
 
 
-class FakeFileObject(StringIO.StringIO):
-    """Amalgam of StringIO and the "with" statement."""
+class FakeFileObject(io.BytesIO):
+    """Amalgam of BytesIO and the "with" statement."""
 
     def __enter__(self):
         return self

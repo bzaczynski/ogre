@@ -24,13 +24,13 @@
 # $ docker build -t ogre:linux -f Dockerfile.linux .
 # $ docker run --rm ogre:linux cat /root/ogre-$VERSION-linux.pex > ogre-$VERSION-linux.pex
 
-FROM python:2.7.13-alpine3.6
+FROM python:3.6.5-alpine3.7
 
 WORKDIR /root
 COPY . /root
 
 RUN apk add --update --no-cache build-base python-dev py-pip jpeg-dev zlib-dev \
- && pip install pex "setuptools<20.11,>=2.2" \
+ && pip install pex==1.4.4 "setuptools<34.0,>=20.3" \
  && python setup.py bdist_wheel install \
- && export VERSION=`python -c "import ogre; print ogre.__version__"` \
+ && export VERSION=`python -c "import ogre; print(ogre.__version__)"` \
  && pex "ogre==$VERSION" -f dist -r requirements.txt -c ogreport.py -o "ogre-$VERSION-linux.pex"

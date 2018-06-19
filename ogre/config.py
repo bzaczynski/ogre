@@ -28,7 +28,7 @@ import collections
 import logging
 
 from pkg_resources import resource_stream
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 
 from ogre.plural import PluralFormatter
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 FILENAME = 'config.ini'
 
 
-class Config(object):
+class Config:
     """Properties grouped by sections."""
 
     def __init__(self, dict_obj):
@@ -48,20 +48,17 @@ class Config(object):
         self._dict = dict_obj
         self._formatter = PluralFormatter()
 
-    def __repr__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
+    def __str__(self):
         """Return textual representation of the config."""
 
         lines = []
         for name in sorted(self._dict):
-            lines.append(u'--- {} ---'.format(name))
+            lines.append('--- {} ---'.format(name))
             for key in sorted(self._dict[name]):
-                lines.append(u'{} = {}'.format(key, self._dict[name][key]))
+                lines.append('{} = {}'.format(key, self._dict[name][key]))
             lines.append('')
 
-        return u'\n'.join(lines)
+        return '\n'.join(lines)
 
     def override(self, path):
         """Override or add new properties from the given *.ini file."""
@@ -95,10 +92,10 @@ class Config(object):
     def _override(self, dict_obj):
         """Update internal dict with keys and values from the given dict."""
         for name in dict_obj:
-            for key, value in dict_obj[name].iteritems():
+            for key, value in dict_obj[name].items():
                 self._dict[name][key] = value
                 logger.debug(
-                    u'Overriding config property %s in section %s with value "%s"',
+                    'Overriding config property %s in section %s with value "%s"',
                     key, name, value)
 
 
@@ -120,32 +117,34 @@ def _load_from_resource(package, filename):
 
 def _load_from_file(path):
     """Load configuration from the file system."""
-    return _load(open, path)
+    return _load(open, path, mode='rb')
 
 
-def _load(source, *args):
+def _load(source, *args, **kwargs):
     """Return a dict of sections and corresponding key-value pairs."""
 
     sections = collections.defaultdict(dict)
 
     try:
-        with source(*args) as file_object:
+        with source(*args, **kwargs) as file_object:
+
+            content = file_object.read().decode('utf-8')
 
             parser = RawConfigParser()
-            parser.readfp(file_object)
+            parser.read_string(content)
 
             for name in parser.sections():
                 for key, value in parser.items(name):
                     sections[_decode(name)][_decode(key)] = _decode(value)
     except IOError:
-        logger.error(u'Unable to load configuration from %s', *args)
+        logger.error('Unable to load configuration from %s', *args)
 
     return sections
 
 
 def _decode(text):
     """Return Unicode string decoded from escaped sequence."""
-    return text.decode('unicode_escape')
+    return bytes(text, 'utf-8').decode('unicode_escape')
 
 
 _INSTANCE = None

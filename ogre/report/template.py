@@ -39,7 +39,7 @@ from ogre.pdf import Table, TableAlign, Header, Column
 from ogre.pdf.table import _Table
 
 
-class Template(object):
+class Template:
     """Template for a single sheet of paper (front and rear side)."""
 
     def __init__(self, canvas):
@@ -72,13 +72,11 @@ class Template(object):
         return False
 
 
-class PageSide(object):
+class PageSide(metaclass=abc.ABCMeta):
     """Abstract base class for a page."""
 
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, canvas, watermark):
-        super(PageSide, self).__init__()
+        super().__init__()
         self._canvas = canvas
         self._watermark = watermark
 
@@ -104,7 +102,7 @@ class BlankPage(PageSide):
     """Empty side of a sheet of paper."""
 
     def __init__(self, canvas, watermark):
-        super(BlankPage, self).__init__(canvas, watermark)
+        super().__init__(canvas, watermark)
 
     def render(self, page_number):
         """Render blank page on the current side of a sheet of paper."""
@@ -113,13 +111,11 @@ class BlankPage(PageSide):
         self._render_footer(page_number)
 
 
-class TabularPageSide(PageSide):
+class TabularPageSide(PageSide, metaclass=abc.ABCMeta):
     """Abstract base class for front and rear sides of a page."""
 
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, canvas, watermark):
-        super(TabularPageSide, self).__init__(canvas, watermark)
+        super().__init__(canvas, watermark)
 
     @property
     def num_rows(self):
@@ -150,7 +146,7 @@ class FrontSide(TabularPageSide):
     """Front side of a single sheet of paper."""
 
     def __init__(self, canvas, watermark):
-        super(FrontSide, self).__init__(canvas, watermark)
+        super().__init__(canvas, watermark)
 
     def render(self, debtor, chunk, page_number):
         """Render the front side of the current sheet of paper."""
@@ -160,16 +156,16 @@ class FrontSide(TabularPageSide):
         self._watermark.render(self._canvas)
 
         table = self._render_table(column_titles=[
-            u'Bank',
-            u'Data z\u0142o\u017cenia zapytania',
-            u'Podpis sk\u0142adaj\u0105cego zapytanie',
-            u'Data odbioru odpowiedzi',
-            u'Podpis odbieraj\u0105cego odpowied\u017a',
-            u'Rodzaj odpowiedzi'])
+            'Bank',
+            'Data z\u0142o\u017cenia zapytania',
+            'Podpis sk\u0142adaj\u0105cego zapytanie',
+            'Data odbioru odpowiedzi',
+            'Podpis odbieraj\u0105cego odpowied\u017a',
+            'Rodzaj odpowiedzi'])
 
         prefix = ''
         if chunk.count > 1:
-            prefix = '({num}/{count}) '.format(**vars(chunk))
+            prefix = '({num}/{count}) '.format(**chunk._asdict())
 
         self._render_title(debtor, table, prefix)
         self._render_replies(chunk.data, table)
@@ -185,11 +181,11 @@ class FrontSide(TabularPageSide):
         self._canvas.font.weight = FontWeight.BOLD
         self._canvas.font.size_mm = 4.5
 
-        id_ = u'{} # {}'.format(debtor.identity.name, debtor.identity.value)
+        id_ = '{} # {}'.format(debtor.identity.name, debtor.identity.value)
         available_space = table.width - self._canvas.get_text_width_mm(id_)
 
         def get_width(title):
-            return self._canvas.get_text_width_mm('Ognivo: ' + title + u'\u2026')
+            return self._canvas.get_text_width_mm('Ognivo: ' + title + '\u2026')
 
         title = prefix + debtor.name
         while get_width(title) > available_space:
@@ -198,7 +194,7 @@ class FrontSide(TabularPageSide):
         title = title.strip()
 
         if title != (prefix + debtor.name):
-            title += u'\u2026'
+            title += '\u2026'
 
         y = table.y - 5.5
         x = self._canvas.text('Ognivo: ', table.x, y)
@@ -259,7 +255,7 @@ class RearSide(TabularPageSide):
     """Rear side of a single sheet of paper."""
 
     def __init__(self, canvas, watermark):
-        super(RearSide, self).__init__(canvas, watermark)
+        super().__init__(canvas, watermark)
 
     def render(self, page_number):
         """Render the rear side of the current sheet of paper."""
@@ -269,12 +265,12 @@ class RearSide(TabularPageSide):
         self._watermark.render(self._canvas)
 
         self._render_table(column_titles=[
-            u'Instytucja',
-            u'Data z\u0142o\u017cenia zapytania',
-            u'Podpis sk\u0142adaj\u0105cego zapytanie',
-            u'Data z\u0142o\u017cenia zapytania',
-            u'Podpis sk\u0142adaj\u0105cego zapytanie',
-            u'Uwagi'])
+            'Instytucja',
+            'Data z\u0142o\u017cenia zapytania',
+            'Podpis sk\u0142adaj\u0105cego zapytanie',
+            'Data z\u0142o\u017cenia zapytania',
+            'Podpis sk\u0142adaj\u0105cego zapytanie',
+            'Uwagi'])
 
         self._render_title()
         self._render_footer(page_number)
@@ -289,13 +285,13 @@ class RearSide(TabularPageSide):
         self._canvas.font.weight = FontWeight.BOLD
         self._canvas.font.size_mm = 3.5
 
-        title = u'Poszukiwanie maj\u0105tku (art. 36 upea) - ZUS, CEPIK, Starostwo, Geodezja, KW'
+        title = 'Poszukiwanie maj\u0105tku (art. 36 upea) - ZUS, CEPIK, Starostwo, Geodezja, KW'
         self._canvas.text(title, 0, 10, self._canvas.width, halign=HAlign.CENTER)
 
         self._canvas.pop_state()
 
 
-class Watermark(object):
+class Watermark:
     """An identifying pattern printed on each page."""
 
     def __init__(self):
@@ -328,8 +324,8 @@ def chunked(data, size):
     ordered_keys = sorted(data, key=lambda x: x.name)
 
     num_chunks = int(math.ceil(len(data) / float(size)))
-    for chunk_num, i in enumerate(xrange(0, len(data), size), 1):
+    for chunk_num, i in enumerate(range(0, len(data), size), 1):
         chunk_keys = ordered_keys[i:i + size]
         yield Chunk(chunk_num, num_chunks, {
-            k: v for k, v in data.iteritems() if k in chunk_keys
+            k: v for k, v in data.items() if k in chunk_keys
         })

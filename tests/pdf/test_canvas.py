@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from reportlab.lib.pagesizes import letter
 
@@ -636,7 +636,7 @@ def set_attribute(obj, path, value):
 
 def set_state(canvas, state):
     """Set the given state for stroke, fill and font."""
-    for key, value in state.iteritems():
+    for key, value in state.items():
         set_attribute(canvas, key, value)
 
 

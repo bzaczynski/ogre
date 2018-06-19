@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from ogre.pdf.rgba import RgbaColor
 
@@ -64,7 +64,7 @@ class DummyColor(RgbaColor):
         self.mock_viewport = mock.Mock()
         self.calls = []
 
-        super(DummyColor, self).__init__(self.mock_viewport)
+        super().__init__(self.mock_viewport)
 
     def _apply(self, color, alpha):
         self.calls.append((color, alpha))

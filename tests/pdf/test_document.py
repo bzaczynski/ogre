@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from ogre.pdf import Document
 from ogre.pdf.metadata import Metadata

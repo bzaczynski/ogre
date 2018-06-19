@@ -12,14 +12,14 @@ $ git clone https://github.com/bzaczynski/ogre.git
 
 Binary packages:
 
-* [Linux](https://www.dropbox.com/s/d7khc1wyyfboyi8/ogre-1.3.2-linux.pex?dl=1)
-* [Windows](https://www.dropbox.com/s/u6cpkux2j690z2d/ogre-1.3.2-windows.pex?dl=1)
+* [Linux](https://www.dropbox.com/s/8jiulcwrff9qiux/ogre-1.4.0-linux.pex?dl=1)
+* [Windows](https://www.dropbox.com/s/md2cnd69czih1tg/ogre-1.4.0-windows.pex?dl=1)
 
 ### Requirements
 
 #### Python
 
-Download and install [Python 2.7](https://www.python.org/downloads/) if not already available on your operating system.
+Download and install [Python 3.x](https://www.python.org/downloads/) if not already available on your operating system.
 
 For advanced use cases described later you will also need to specify the location of Python interpreter via the `PATH` environment variable. However, you can skip this step for now.
 
@@ -28,7 +28,7 @@ For advanced use cases described later you will also need to specify the locatio
 By default Python installer does not modify environment variables on Windows. To manually add the location of Python interpreter to user's `PATH` environment variable open the command line and type:
 
 ```
-C:\> SETX PATH "%PATH%;C:\Python27\;C:\Python27\Scripts"
+C:\> SETX PATH "%PATH%;%LOCALAPPDATA%\Programs\Python\Python36\;%LOCALAPPDATA%\Programs\Python\Python36\Scripts\"
 ```
 
 To make Python work for all users run the command line as administrator and type the same command with the `/M` flag which will affect the corresponding `PATH` system variable instead.
@@ -72,10 +72,6 @@ Although not strictly required it is still advisable to use a dedicated virtual 
 ```
 $ pip install virtualenv virtualenvwraper
 ```
-
-##### C++ Compiler
-
-On Windows you will need to install [Microsoft Visual C++ Compiler for Python 2.7](http://aka.ms/vcpython27) since this program depends on native libraries which need to be built from source.
 
 #### System-wide Installation
 
@@ -190,15 +186,15 @@ Note that all three configuration sources can be used simultaneously. They are p
 
 **WARNING!**
 
-The name *ogre* is already taken by another project on [PyPI](https://pypi.python.org/pypi) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.3.2* is given below.
+The name *ogre* is already taken by another project on [PyPI](https://pypi.org/) which takes precedence over the local project via pip/pex. In order to force the packaging of a local project instead of the one from PyPI an explicit version of *1.4.0* is given below.
 
 #### Linux
 
 ```
 $ mkvirtualenv venv
-(venv) $ pip install pex "setuptools<20.11,>=2.2"
+(venv) $ pip install pex==1.4.4 "setuptools<34.0,>=20.3"
 (venv) $ python setup.py bdist_wheel
-(venv) $ pex "ogre==1.3.2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.3.2-linux.pex
+(venv) $ pex "ogre==1.4.0" -f dist -r requirements.txt -c ogreport.py -o ogre-1.4.0-linux.pex
 ```
 
 #### Windows
@@ -209,12 +205,12 @@ C:\> virtualenv venv
 C:\> venv\Scripts\activate
 (venv) C:\> pip install pex
 (venv) C:\> python setup.py bdist_wheel
-(venv) C:\> pex "ogre==1.3.2" -f dist -r requirements.txt -c ogreport.py -o ogre-1.3.2-windows.pex
+(venv) C:\> pex "ogre==1.4.0" -f dist -r requirements.txt -c ogreport.py -o ogre-1.4.0-windows.pex
 ```
 
 ### Author
 
-Bartosz Zaczynski
+Bartosz Zaczyński
 
 ### License
 

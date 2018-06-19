@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 import collections
 
@@ -146,6 +146,7 @@ class TestFrontSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_render_footer_on_rear_side(self, mock_canvas):
+        mock_canvas.return_value.stringWidth.return_value = 0.0
         RearSide(Canvas(), mock.Mock()).render(777)
         mock_canvas.return_value.beginText.return_value.assert_has_calls([
             mock.call.textLine('Strona 777')
@@ -172,21 +173,21 @@ class TestFrontSide(unittest.TestCase):
 
         # column titles
         mock_canvas.return_value.beginText.return_value.textLine.assert_has_calls([
-            mock.call(u'Bank'),
-            mock.call(u'Data'),
-            mock.call(u'z\u0142o\u017cenia'),
-            mock.call(u'zapytania'),
-            mock.call(u'Podpis'),
-            mock.call(u'sk\u0142adaj\u0105cego'),
-            mock.call(u'zapytanie'),
-            mock.call(u'Data'),
-            mock.call(u'odbioru'),
-            mock.call(u'odpowiedzi'),
-            mock.call(u'Podpis'),
-            mock.call(u'odbieraj\u0105cego'),
-            mock.call(u'odpowied\u017a'),
-            mock.call(u'Rodzaj'),
-            mock.call(u'odpowiedzi')
+            mock.call('Bank'),
+            mock.call('Data'),
+            mock.call('z\u0142o\u017cenia'),
+            mock.call('zapytania'),
+            mock.call('Podpis'),
+            mock.call('sk\u0142adaj\u0105cego'),
+            mock.call('zapytanie'),
+            mock.call('Data'),
+            mock.call('odbioru'),
+            mock.call('odpowiedzi'),
+            mock.call('Podpis'),
+            mock.call('odbieraj\u0105cego'),
+            mock.call('odpowied\u017a'),
+            mock.call('Rodzaj'),
+            mock.call('odpowiedzi')
         ])
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
@@ -219,11 +220,14 @@ class TestFrontSide(unittest.TestCase):
             mock.call.setRise(0.0),
             mock.call.getY(),
             mock.call.setTextOrigin(mock.ANY, mock.ANY),
-            mock.call.textLine(u'PESEL # 12345678901')
+            mock.call.textLine('PESEL # 12345678901')
         ])
 
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
     @mock.patch('ogre.report.template.Table')
-    def test_should_render_replies_sorted_by_name_of_bank(self, mock_table):
+    def test_should_render_replies_sorted_by_name_of_bank(self, mock_table, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = 0.0
 
         bank1 = mock.Mock()
         bank1.code = '00123'
@@ -251,6 +255,7 @@ class TestFrontSide(unittest.TestCase):
         })
 
         mock_table.return_value.width = 175
+        mock_table.return_value.x = 0
 
         FrontSide(Canvas(), mock.Mock()).render(self.mock_debtor, replies, 0)
 
@@ -286,7 +291,7 @@ class TestFrontSide(unittest.TestCase):
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_shorten_long_name_and_add_ellipsis(self, mock_canvas):
 
-        it = iter(xrange(900, 300, -7))
+        it = iter(range(900, 300, -7))
 
         def stringWidth(text, *args):
             if text.startswith('PESEL'):
@@ -305,19 +310,39 @@ class TestFrontSide(unittest.TestCase):
         FrontSide(Canvas(), mock.Mock()).render(mock_debtor, Chunk(1, 1, {}), 0)
 
         mock_canvas.return_value.assert_has_calls([
-            mock.call.beginText().textLine(u'lorem ipsum dolor sit amet lorem ipsum dolor sit amet lore\u2026')
+            mock.call.beginText().textLine('lorem ipsum dolor sit amet lorem ipsum dolor sit amet lore\u2026')
         ], any_order=True)
+
+    @mock.patch('reportlab.pdfgen.canvas.Canvas')
+    def test_should_call_chunk_asdict(self, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = -999.0
+
+        mock_chunk = mock.Mock()
+        mock_chunk.count = 2
+        mock_chunk.num = 1
+        mock_chunk.data = {}
+        mock_chunk._asdict.return_value = {'count': 2, 'num': 1, 'data': {}}
+
+        mock_debtor = mock.Mock()
+        mock_debtor.name = 'Jan Kowalski'
+
+        FrontSide(Canvas(), mock.Mock()).render(mock_debtor, mock_chunk, 0)
+        mock_chunk._asdict.assert_called()
 
 
 class TestRearSide(unittest.TestCase):
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_not_add_new_page_before_rendering_first_page(self, mock_canvas):
+        mock_canvas.return_value.stringWidth.return_value = 0.0
         RearSide(Canvas(), mock.Mock()).render(0)
         self.assertNotIn(mock.call.showPage(), mock_canvas.return_value.mock_calls)
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas')
     def test_should_add_new_page_before_rendering(self, mock_canvas):
+
+        mock_canvas.return_value.stringWidth.return_value = 0.0
 
         canvas = Canvas()
         canvas.add_page()
@@ -388,20 +413,20 @@ class TestRearSide(unittest.TestCase):
 
         # column titles
         mock_canvas.return_value.beginText.return_value.textLine.assert_has_calls([
-            mock.call(u'Instytucja'),
-            mock.call(u'Data'),
-            mock.call(u'z\u0142o\u017cenia'),
-            mock.call(u'zapytania'),
-            mock.call(u'Podpis'),
-            mock.call(u'sk\u0142adaj\u0105cego'),
-            mock.call(u'zapytanie'),
-            mock.call(u'Data'),
-            mock.call(u'z\u0142o\u017cenia'),
-            mock.call(u'zapytania'),
-            mock.call(u'Podpis'),
-            mock.call(u'sk\u0142adaj\u0105cego'),
-            mock.call(u'zapytanie'),
-            mock.call(u'Uwagi')
+            mock.call('Instytucja'),
+            mock.call('Data'),
+            mock.call('z\u0142o\u017cenia'),
+            mock.call('zapytania'),
+            mock.call('Podpis'),
+            mock.call('sk\u0142adaj\u0105cego'),
+            mock.call('zapytanie'),
+            mock.call('Data'),
+            mock.call('z\u0142o\u017cenia'),
+            mock.call('zapytania'),
+            mock.call('Podpis'),
+            mock.call('sk\u0142adaj\u0105cego'),
+            mock.call('zapytanie'),
+            mock.call('Uwagi')
         ])
 
     @mock.patch('reportlab.pdfgen.canvas.Canvas.beginText')
@@ -415,7 +440,7 @@ class TestRearSide(unittest.TestCase):
             mock.call.setRise(0.0),
             mock.call.getY(),
             mock.call.setTextOrigin(116.65913385826767, mock.ANY),
-            mock.call.textLine(u'Poszukiwanie maj\u0105tku (art. 36 upea) - ZUS, CEPIK, Starostwo, Geodezja, KW')])
+            mock.call.textLine('Poszukiwanie maj\u0105tku (art. 36 upea) - ZUS, CEPIK, Starostwo, Geodezja, KW')])
 
 
 class TestWatermark(unittest.TestCase):
@@ -447,7 +472,7 @@ class TestWatermark(unittest.TestCase):
         mock_canvas.assert_has_calls([
             mock.call.push_state(),
             mock.call.set_default_state(),
-            mock.call.text(u'lorem ipsum', 0, 2, mock.ANY, halign=HAlign.CENTER),
+            mock.call.text('lorem ipsum', 0, 2, mock.ANY, halign=HAlign.CENTER),
             mock.call.pop_state()])
 
     @freeze_time('1970-01-01')
@@ -464,14 +489,14 @@ class TestWatermark(unittest.TestCase):
         mock_canvas.assert_has_calls([
             mock.call.push_state(),
             mock.call.set_default_state(),
-            mock.call.text(u'year=1970 month=1 day=1', 0, 2, mock.ANY, halign=HAlign.CENTER),
+            mock.call.text('year=1970 month=1 day=1', 0, 2, mock.ANY, halign=HAlign.CENTER),
             mock.call.pop_state()])
 
 
 class TestChunked(unittest.TestCase):
 
     def make_items(self, **kwargs):
-        return {Fake(k): v for k, v in kwargs.iteritems()}
+        return {Fake(k): v for k, v in kwargs.items()}
 
     def test_should_return_empty_generator(self):
         with self.assertRaises(StopIteration):

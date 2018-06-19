@@ -36,13 +36,13 @@ from ogre.config import config
 logger = logging.getLogger(__name__)
 
 
-class Identity(object):
+class Identity:
     """Identifying number of a legal entity, e.g. PESEL, NIP, REGON."""
 
     def __init__(self, name, value):
         self.name = name.upper()
         self.value = value.lstrip('0') \
-            if isinstance(value, basestring) else value
+            if isinstance(value, str) else value
 
     def __hash__(self):
         return hash((self.name, self.value))
@@ -51,19 +51,16 @@ class Identity(object):
         return (self.name, self.value) == (other.name, other.value)
 
     def __repr__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return u'Identity(name="{}", value="{}")'.format(self.name,
-                                                         self.value)
+        return 'Identity(name="{}", value="{}")'.format(self.name,
+                                                        self.value)
 
 
-class Reply(object):
+class Reply:
     """Information whether debtor has an account in the given bank."""
 
     def __init__(self, bank, date, has_account, file_path):
 
-        assert isinstance(date, (basestring, datetime.datetime)), \
+        assert isinstance(date, (str, datetime.datetime)), \
             'expected datetime.datetime or string'
 
         self.bank = bank
@@ -88,17 +85,14 @@ class Reply(object):
                 return naive_datetime.strftime('%H:%M')
 
     def __repr__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        fmt = u'Reply(bank="{}", date="{}", has_account={}, file_path="{}")'
+        fmt = 'Reply(bank="{}", date="{}", has_account={}, file_path="{}")'
         return fmt.format(self.bank,
                           self.date.isoformat() if self.date else '',
                           str(self.has_account).lower(),
                           self.file_path)
 
 
-class Debtor(object):
+class Debtor:
     """Natural person or legal entity identified by NIP, PESEL or REGON."""
 
     def __init__(self, entity):
@@ -114,7 +108,7 @@ class Debtor(object):
     def name(self):
         """Return debtor's name or first name and last name."""
         if self.is_person:
-            return u'{} {}'.format(self.entity.first_name, self.entity.last_name)
+            return '{} {}'.format(self.entity.first_name, self.entity.last_name)
         return self.entity.name
 
     def __hash__(self):
@@ -124,13 +118,10 @@ class Debtor(object):
         return self.identity == other.identity
 
     def __repr__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return u'Debtor(name="{}", id={})'.format(self.name, self.identity)
+        return 'Debtor(name="{}", id={})'.format(self.name, self.identity)
 
 
-class Bank(object):
+class Bank:
     """Sender of a reply."""
 
     def __init__(self, code):
@@ -144,24 +135,21 @@ class Bank(object):
         return self.code == other.code
 
     def __repr__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        return u'Bank(code="{}", name="{}")'.format(self.code, self.name)
+        return 'Bank(code="{}", name="{}")'.format(self.code, self.name)
 
 
-class Model(object):
+class Model:
     """A collection of debtors, banks and their replies."""
 
     def __init__(self, file_paths):
 
-        assert isinstance(file_paths, (tuple, list)), 'expected list of paths'
+        assert isinstance(file_paths, collections.Iterable), 'expected an iterable'
 
         self._banks = set()
         self._debtors = set()
         self._replies = collections.defaultdict(dict)
 
-        logger.info(u'Scanning working directory...')
+        logger.info('Scanning working directory...')
         for i, file_path in enumerate(sorted(file_paths)):
             try:
                 parser = BankReplyParser(file_path)
@@ -184,8 +172,8 @@ class Model(object):
                         previous_reply = self._replies[debtor][bank]
                         if previous_reply.has_account != reply.has_account:
 
-                            logger.warn(
-                                u'Inconsistent replies from the same bank %s for %s',
+                            logger.warning(
+                                'Inconsistent replies from the same bank %s for %s',
                                 bank, debtor)
 
                             if previous_reply.date == reply.date:
@@ -198,10 +186,10 @@ class Model(object):
 
             except Exception:
                 logger.error(
-                    u'Invalid or not well-formed XML content at %s', file_path)
+                    'Invalid or not well-formed XML content at %s', file_path)
             else:
                 logger.debug(
-                    u'Processed file %d of %d "%s"',
+                    'Processed file %d of %d "%s"',
                     i + 1, len(file_paths), file_path)
 
     @property
@@ -228,10 +216,10 @@ class Model(object):
         def key_function(debtor):
             """Return element's comparison key for sorting."""
             if debtor.is_person:
-                return collator.sort_key(unicode(debtor.entity.last_name)),\
-                       collator.sort_key(unicode(debtor.entity.first_name))
+                return collator.sort_key(debtor.entity.last_name),\
+                       collator.sort_key(debtor.entity.first_name)
             else:
-                return collator.sort_key(unicode(debtor.name))
+                return tuple(), collator.sort_key(debtor.name)
 
         return sorted(self.debtors, key=key_function)
 

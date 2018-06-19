@@ -26,6 +26,7 @@ Alignment enumerations of text and other primitives.
 
 import enum
 
+
 class HAlign(enum.Enum):
     """Horizontal alignment within a container."""
 

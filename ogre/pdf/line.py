@@ -38,11 +38,11 @@ class Fill(RgbaColor):
     ATTRIBUTES = ('color', 'alpha')
 
     def __init__(self, viewport):
-        super(Fill, self).__init__(viewport)
+        super().__init__(viewport)
 
     def __setattr__(self, key, value):
         if key in Fill.ATTRIBUTES or key.startswith('_'):
-            super(Fill, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             raise AttributeError("Fill has no attribute '%s'" % key)
 
@@ -73,7 +73,7 @@ class Stroke(RgbaColor):
 
     def __init__(self, viewport):
 
-        super(Stroke, self).__init__(viewport)
+        super().__init__(viewport)
 
         self._line_width = normalize(0.1)
         self._line_cap = LineCap.BUTT
@@ -89,7 +89,7 @@ class Stroke(RgbaColor):
 
     def __setattr__(self, key, value):
         if key in Stroke.ATTRIBUTES or key.startswith('_'):
-            super(Stroke, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             raise AttributeError("Stroke has no attribute '%s'" % key)
 
@@ -109,7 +109,7 @@ class Stroke(RgbaColor):
     def apply(self):
         """Apply properties on demand."""
 
-        super(Stroke, self).apply()
+        super().apply()
 
         self._viewport.setLineWidth(self._line_width)
         self._viewport.setLineCap(self._line_cap.value)
@@ -191,7 +191,7 @@ class LineJoin(enum.Enum):
     BEVEL = 2
 
 
-class LineDash(object):
+class LineDash:
     """A pattern for drawing dotted or dashed lines."""
 
     def __init__(self, pattern=None):

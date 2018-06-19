@@ -38,8 +38,8 @@ LegalEntity = namedtuple('LegalEntity', 'name id has_account')
 
 
 
-class BankReplyParser(object):
-    u"""Parser of an XML reply from a financial institution.
+class BankReplyParser:
+    """Parser of an XML reply from a financial institution.
 
     Sample reply:
     <?xml version="1.0" encoding="utf-8"?>
@@ -93,7 +93,7 @@ class BankReplyParser(object):
         text = self._xml.get('/ePismo/@dataPisma')
         try:
             return dateutil.parser.parse(text)
-        except (AttributeError, ValueError):
+        except (AttributeError, ValueError, TypeError):
             return text
 
     @property
@@ -107,7 +107,7 @@ class BankReplyParser(object):
 
         def identity(child):
             """Return one of PESEL, NIP, REGON with a corresponding value."""
-            name, value = child.get('Oznaczenie').items().pop()
+            name, value = list(child.get('Oznaczenie').items()).pop()
             return Id(name.upper(), value)
 
         def has_account(child):
@@ -130,7 +130,7 @@ class BankReplyParser(object):
                     has_account(child))
 
 
-class XmlDocument(object):
+class XmlDocument:
     """Convenience class for handling character encoding and querying XML."""
 
     def __init__(self, path):
@@ -146,7 +146,7 @@ class XmlDocument(object):
         return XmlElement(self.xml).get_list(xpath)
 
 
-class XmlElement(object):
+class XmlElement:
     """Dict value wrapper with XPath-like syntax for querying."""
 
     def __init__(self, value):
@@ -159,7 +159,7 @@ class XmlElement(object):
             if child is None:
                 return None
             child = child.get(key)
-        return map(XmlElement, child) if isinstance(child, list) else child
+        return list(map(XmlElement, child)) if isinstance(child, list) else child
 
     def get_list(self, xpath):
         """Ensure that XPath expression evaluates to a list of elements."""

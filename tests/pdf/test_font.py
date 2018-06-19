@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from reportlab.pdfbase import pdfmetrics
 
@@ -238,7 +238,7 @@ class TestFont(unittest.TestCase):
 
 
 def unregister_custom_fonts():
-    for name in pdfmetrics._fonts.keys():
+    for name in list(pdfmetrics._fonts.keys())[:]:
         if name not in ('Symbol', 'ZapfDingbats'):
             del pdfmetrics._fonts[name]
     Font.registered = False

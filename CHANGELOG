@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.4.0
+
+### Migrate to Python 3
+
+* Replace `print` statement with the `print()` function.
+* Replace `exec` statement with the `exec()` function.
+* Remove references to `basestring`, `long` and `unicode` types.
+* Rename `xrange()` to `range()`.
+* Use dot-syntax in relative imports, e.g. `from .foo import bar`.
+* Replace `{}.iteritems()` with `{}.items()`.
+* Use the new f-string formatting syntax (since Python 3.6).
+* Eagerly cast generators such as `map()`, `zip()` or `{}.keys()`.
+* Make a copy of `{}.keys()` while iterating, e.g. `list({}.keys())[:]`.
+* Replace `class(object)` with the new-style `class`.
+* Replace `__metaclass__` attribute with `class(metaclass=...)` syntax.
+* Replace `super(ClassName, self)` with `super()`.
+* Replace `__unicode__(self)` with `__repr__(self)`.
+* Strip Unicode prefix `u''` from string literals.
+* Replace Unicode escape codes such as `\u0105` with UTF-8 encoded characters.
+* Convert between `bytes` and `str`.
+* Rename `ConfigParser` module name to `configparser`.
+* Rename `cStringIO` module name to `io`.
+* Use `io.BytesIO` instead of `io.StringIO` where necessary.
+* Refactor deprecated code.
+* Update unit tests.
+* Update Dockerfile.
+* Bump dependency versions in requirement files.
+* Remove dependencies incorporated to Python such as `unittest.mock` or `enum`.
+
+### Miscellaneous
+
+* Bug fix: Reportlab expects a buffer of bytes not strings.
+* Bug fix: replace `vars(namedtuple)` with `namedtuple._asdict()`.
+
+    > collections.namedtuple no longer contains `__dict__` attribute.
+
 ## 1.3.2
 
 * Show page number as well as watermark on a blank page.
