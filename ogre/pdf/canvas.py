@@ -53,7 +53,7 @@ class Canvas:
     """Finite rectangular region used for rendering."""
 
     def __init__(self, size=A4):
-        self._buffer = io.StringIO()
+        self._buffer = io.BytesIO()
         self._viewport = reportlab.pdfgen.canvas.Canvas(self._buffer, size)
         self._width, self._height = size
         self._state = State(self._viewport)

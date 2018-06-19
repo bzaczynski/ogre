@@ -31,11 +31,11 @@
 
 ### Miscellaneous
 
+* Bug fix: Reportlab expects a buffer of bytes not strings.
 * Bug fix: replace `vars(namedtuple)` with `namedtuple._asdict()`.
 
     > collections.namedtuple no longer contains `__dict__` attribute.
 
-* TODO bug: saving to file bytes
 * TODO: update README
 * TODO: compile binaries for Windows and Linux
 * TODO: test thoroughly (e.g. compare against the old version)

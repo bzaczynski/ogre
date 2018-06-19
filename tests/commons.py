@@ -2,7 +2,7 @@ import io
 
 
 class FakeFileObject(io.BytesIO):
-    """Amalgam of StringIO and the "with" statement."""
+    """Amalgam of BytesIO and the "with" statement."""
 
     def __enter__(self):
         return self
