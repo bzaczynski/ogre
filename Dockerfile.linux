@@ -32,5 +32,5 @@ COPY . /root
 RUN apk add --update --no-cache build-base python-dev py-pip jpeg-dev zlib-dev \
  && pip install pex "setuptools<20.11,>=2.2" \
  && python setup.py bdist_wheel install \
- && export VERSION=`python -c "import ogre; print ogre.__version__"` \
+ && export VERSION=`python -c "import ogre; print(ogre.__version__)"` \
  && pex "ogre==$VERSION" -f dist -r requirements.txt -c ogreport.py -o "ogre-$VERSION-linux.pex"
